@@ -1,4 +1,0 @@
-excel2img
-discord
-json
-requests
