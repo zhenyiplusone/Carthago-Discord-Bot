@@ -12,7 +12,7 @@ with a CSV as input or create a single one.
 import csv
 import re
 import discord
-import excel2img
+#import excel2img
 import time
 from discord.ext import commands
 from openpyxl.styles import Font
@@ -316,7 +316,7 @@ async def war_info(ctx): #need to make this faster and more efficient
 
     book.save('spreadsheet/War.xlsx')
 
-    excel2img.export_img("spreadsheet/War.xlsx","spreadsheet/image.png","War Scenario Sheet")
+    #excel2img.export_img("spreadsheet/War.xlsx","spreadsheet/image.png","War Scenario Sheet")
     image = discord.File("spreadsheet/image.png", filename="war_screen.png")
     await message.delete()
     await ctx.send(file = image)
