@@ -317,9 +317,10 @@ async def war_info(ctx): #need to make this faster and more efficient
     book.save('spreadsheet/War.xlsx')
 
     #excel2img.export_img("spreadsheet/War.xlsx","spreadsheet/image.png","War Scenario Sheet")
-    image = discord.File("spreadsheet/image.png", filename="war_screen.png")
+    #image = discord.File("spreadsheet/image.png", filename="war_screen.png")
+    sheet = discord.File('spreadsheet/War.xlsx', filename="war_sheet.xlsx")
     await message.delete()
-    await ctx.send(file = image)
+    await ctx.send(file = sheet)
 
 async def coord_perms(members, channel, channel_name, ctx):
     ''' 
