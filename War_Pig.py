@@ -363,14 +363,15 @@ async def graph(ctx, type, *alliances): #need to make this faster and more effic
 
         label = []
         for name in alliances:
-            label.append(name.replace(' ', '+'))
+            label.append(name.replace('+', ' '))
         ax0.hist(alliances_data, 45, histtype='bar', label=label)
         ax0.legend(loc = 0)
         ax0.set_title('Comparison Graph')
+        ax0.xaxis.set_ticks(np.arange(0, 44, 2))
 
         ax1.hist(alliances_data, 45, histtype='bar', stacked=True)
         ax1.set_title('Stacked Histogram')
-
+        ax1.xaxis.set_ticks(np.arange(0, 44, 2))
         fig.savefig('graph.png', dpi = 400)
 
         pic = discord.File('graph.png', filename="graph.png")
