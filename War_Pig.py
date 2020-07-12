@@ -12,8 +12,14 @@ with a CSV as input or create a single one.
 import csv
 import re
 import discord
+import requests
 #import excel2img
 import time
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import math
+from bs4 import BeautifulSoup
 from discord.ext import commands
 from openpyxl.styles import Font
 from openpyxl.styles import colors
@@ -321,6 +327,55 @@ async def war_info(ctx): #need to make this faster and more efficient
     sheet = discord.File('spreadsheet/War.xlsx', filename="war_sheet.xlsx")
     await message.delete()
     await ctx.send(file = sheet)
+
+
+@client.command()
+@commands.cooldown(1, 60, commands.BucketType.channel)
+async def graph(ctx, type, *alliances): #need to make this faster and more efficient
+    message = await ctx.send('Gathering information... please wait a few moments')
+
+    if type == 'sphere':
+        alliances_data = []
+        for ally in alliances:
+            res = requests.get(f'https://politicsandwar.com/index.php?id=15&keyword={ally}&cat=alliance&ob=score&od=DESC&maximum=15&minimum=0&search=Go&memberview=true')
+            soup_data = BeautifulSoup(res.text, 'html.parser')
+            data = soup_data.find(text = re.compile('Showing'))
+            num_nations = float(data.split()[3])
+
+            alliance_city_data = []
+            #alliance_city_data = defaultdict(lambda: 0, alliance_city_data)
+
+            for nations in range(0, math.ceil(num_nations/3)):
+                res = requests.get(f'https://politicsandwar.com/index.php?id=15&keyword={ally}&cat=alliance&ob=score&od=DESC&maximum={50*(nations+1)}&minimum={50*nations}&search=Go&memberview=true')
+                soup_data = BeautifulSoup(res.text, 'html.parser')
+                data = soup_data.find_all("td", attrs={"class": "right"}, text = re.compile(r'^[1-9]\d*$'))
+
+                for city in data:
+                    alliance_city_data.append(float(city.contents[0]))
+                    #alliance_city_data[city.contents[0]] += 1
+            alliance_city_data = np.array(alliance_city_data)
+            alliances_data.append(alliance_city_data)
+
+        fig, axes = plt.subplots(nrows=1, ncols=2)
+        ax0, ax1 = axes.flatten()
+        fig.set_figheight(10)
+        fig.set_figwidth(20)
+
+        label = []
+        for name in alliances:
+            label.append(name.replace(' ', '+'))
+        ax0.hist(alliances_data, 45, histtype='bar', label=label)
+        ax0.legend(loc = 0)
+        ax0.set_title('Comparison Graph')
+
+        ax1.hist(alliances_data, 45, histtype='bar', stacked=True)
+        ax1.set_title('Stacked Histogram')
+
+        fig.savefig('graph.png', dpi = 400)
+
+        pic = discord.File('graph.png', filename="graph.png")
+        await message.delete()
+        await ctx.send(file = pic)
 
 async def coord_perms(members, channel, channel_name, ctx):
     ''' 

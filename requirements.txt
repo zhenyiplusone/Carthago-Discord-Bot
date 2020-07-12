@@ -2,3 +2,7 @@ discord==1.0.1
 discord.py==1.3.3
 requests==2.22.0
 openpyxl
+numpy
+pandas
+matplotlib
+bs4
