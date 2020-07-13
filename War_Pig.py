@@ -336,6 +336,10 @@ async def graph(ctx, type, *alliances): #need to make this faster and more effic
 
     if type == 'sphere':
         alliances_data = []
+        label = []
+        for name in alliances:
+            label.append(name.replace('+', ' ').title())
+
         for ally in alliances:
             await message.edit(content = f'Gathering information from {ally.replace("+", " ").title()}')
             print(ally)
@@ -345,6 +349,7 @@ async def graph(ctx, type, *alliances): #need to make this faster and more effic
             num_nations = float(data.split()[3])
             if num_nations == 0:
                 await ctx.send(f'Could not find any nations in the alliance {ally.replace("+", " ").title()}, make sure it is spelled correctly')
+                label.remove(ally)
                 continue
             alliance_city_data = []
             #alliance_city_data = defaultdict(lambda: 0, alliance_city_data)
@@ -365,9 +370,6 @@ async def graph(ctx, type, *alliances): #need to make this faster and more effic
         fig.set_figheight(10)
         fig.set_figwidth(20)
 
-        label = []
-        for name in alliances:
-            label.append(name.replace('+', ' ').title())
         n_bins = max(list(map(lambda x: np.amax(x), alliances_data))).astype(np.int64)+1
 
         ax0.hist(alliances_data, range(n_bins+1), histtype='bar', label=label)
