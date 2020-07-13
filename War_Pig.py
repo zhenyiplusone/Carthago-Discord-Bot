@@ -332,11 +332,13 @@ async def war_info(ctx): #need to make this faster and more efficient
 @client.command()
 @commands.cooldown(1, 60, commands.BucketType.channel)
 async def graph(ctx, type, *alliances): #need to make this faster and more efficient
-    message = await ctx.send('Gathering information... please wait a few moments')
+    message = await ctx.send('Generating graph... please wait a few moments')
 
     if type == 'sphere':
         alliances_data = []
         for ally in alliances:
+            await message.edit(content = f'Gathering information from {ally.replace("+", " ")}')
+            print(ally)
             res = requests.get(f'https://politicsandwar.com/index.php?id=15&keyword={ally}&cat=alliance&ob=score&od=DESC&maximum=15&minimum=0&search=Go&memberview=true')
             soup_data = BeautifulSoup(res.text, 'html.parser')
             data = soup_data.find(text = re.compile('Showing'))
@@ -363,16 +365,20 @@ async def graph(ctx, type, *alliances): #need to make this faster and more effic
 
         label = []
         for name in alliances:
-            label.append(name.replace('+', ' '))
-        ax0.hist(alliances_data, 45, histtype='bar', label=label)
+            label.append(name.replace('+', ' ').title())
+        n_bins = max(list(map(lambda x: np.amax(x), alliances_data))).astype(np.int64)+1
+
+        ax0.hist(alliances_data, range(n_bins+1), histtype='bar', label=label)
         ax0.legend(loc = 0)
         ax0.set_title('Comparison Graph')
-        ax0.xaxis.set_ticks(np.arange(0, 44, 2))
+        ax0.xaxis.set_ticks(np.arange(0, n_bins, 3))
+        plt.setp(ax0.get_xticklabels(), rotation=30, horizontalalignment='right')
 
-        ax1.hist(alliances_data, 45, histtype='bar', stacked=True)
+        ax1.hist(alliances_data, range(n_bins+1), histtype='bar', stacked=True)
         ax1.set_title('Stacked Histogram')
-        ax1.xaxis.set_ticks(np.arange(0, 44, 2))
-        fig.savefig('graph.png', dpi = 400)
+        ax1.xaxis.set_ticks(np.arange(0, n_bins, 1))
+        plt.setp(ax1.get_xticklabels(), rotation=30, horizontalalignment='right')
+        fig.savefig('graph.png', dpi = 300)
 
         pic = discord.File('graph.png', filename="graph.png")
         await message.delete()
