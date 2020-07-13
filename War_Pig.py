@@ -337,13 +337,15 @@ async def graph(ctx, type, *alliances): #need to make this faster and more effic
     if type == 'sphere':
         alliances_data = []
         for ally in alliances:
-            await message.edit(content = f'Gathering information from {ally.replace("+", " ")}')
+            await message.edit(content = f'Gathering information from {ally.replace("+", " ").title()}')
             print(ally)
             res = requests.get(f'https://politicsandwar.com/index.php?id=15&keyword={ally}&cat=alliance&ob=score&od=DESC&maximum=15&minimum=0&search=Go&memberview=true')
             soup_data = BeautifulSoup(res.text, 'html.parser')
             data = soup_data.find(text = re.compile('Showing'))
             num_nations = float(data.split()[3])
-
+            if num_nations == 0:
+                await ctx.send(f'Could not find any nations in the alliance {ally.replace("+", " ").title()}, make sure it is spelled correctly')
+                continue
             alliance_city_data = []
             #alliance_city_data = defaultdict(lambda: 0, alliance_city_data)
 
