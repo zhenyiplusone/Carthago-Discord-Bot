@@ -40,7 +40,7 @@ member_names = ['Azrael','New Suleiman','Daveth','Locinii','Lothair of Acre','Gr
 'Ion Constantinescu','Zeannon','Uhsnadev','Shawn Washington','the Rising Sun',
 'Wilhelm-Augustus','NotCool','Cthulhu The Devourer','Strett','Antonio','Tyras Calidan',
 'Waldo','KingDracula','Leigh','Gust','CaN','Madder Red','Germania','El Chach','Solomoriah',
-'Zegrath the Black']
+'Zegrath the Black', 'EvilPiggyFooFoo']
 
 dis_id = [203472925737746432,252246017725038593,285413989658263552,305437895538507780,537421144731549707,
 323631619456106507,401403136171835415,401145199310667783,369554334431838208,616473001189441541,398868908724977675,
@@ -49,7 +49,7 @@ dis_id = [203472925737746432,252246017725038593,285413989658263552,3054378955385
 294156214454190083,367273586102239234,315607812149608458,380826721634746388,582844188760997908,197031131093139465,
 456554347963088909,154719217558618113,111543344521302016,441584968838152192,415335544541937665,458799865271418892,
 339330441603710977,328153663984107521,174116297951412225,400787601503682597,465869010936922112,669983109986385965,
-404132209692508160]
+404132209692508160, 236978935538122754]
 
 member_dict = dict(zip(member_names, dis_id))
 
@@ -99,9 +99,7 @@ async def bulk_create(ctx):
                     channel_name = target_name.replace(' ', '-') + '-' + target_id
 
                     #Creates the channel and edits the topic
-                    await ctx.guild.create_text_channel(channel_name, category = category)
-                    channel = discord.utils.get(ctx.guild.text_channels, name = channel_name.lower())
-                    await channel.edit(topic = f'War on {row[0]}')
+                    channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on {row[0]}')
                     
                     #Gets the permissions for the members set up and pings them
                     ping_list = await coord_perms(attackers, channel, channel_name, ctx)
@@ -109,15 +107,12 @@ async def bulk_create(ctx):
                     \n 1.) Make sure you have enough resources including food and uranium, ping gov if you need more\
                     \n 2.) Look over their military and each other's before going in and plan out the best move\
                     \n 3.) Talk and coordinate with fellow members, declare at the same time and help each other\
-                    \n Good luck!\
-                    \n THIS IS A TEST DO NOT ACTUALLY ATTACK LMAO\
-                    \n AGAIN THIS IS A BOT TEST :) THANKS") 
+                    \n Good luck!") 
                     def_ping_list = await coord_perms(defenders, channel, channel_name, ctx)
                     if len(def_ping_list) != 0:
                         await channel.send(f'{ping(def_ping_list)}is/are defending against {target_name}') 
                     mil_count = get_pnw_mil(f'https://politicsandwar.com/nation/id={target_id}')
-                    await channel.send(f'{target_name} has {mil_count["Soldiers"]} soldiers,\
-                    {mil_count["Tanks"]} tanks, {mil_count["Planes"]} planes, and {mil_count["Ships"]} ships') 
+                    await channel.send(f'{target_name} has {mil_count["Soldiers"]} soldiers, {mil_count["Tanks"]} tanks, {mil_count["Planes"]} planes, and {mil_count["Ships"]} ships') 
 
                 line += 1
 
@@ -168,7 +163,6 @@ async def run_test_sheet(ctx):
 
 
 
-
 @client.command()
 async def create_chan(ctx, nation_link, *members: discord.Member):
     ''' 
@@ -185,12 +179,12 @@ async def create_chan(ctx, nation_link, *members: discord.Member):
         #Makes sure that the nation_link is in the right format
         if(re.search(r'politicsandwar.com/nation/id=\d{1,7}', nation_link)):
             channel_name = get_pnw_name(nation_link).replace(' ', '-') + '-' + nation_link.split('=')[1]
-            await ctx.guild.create_text_channel(channel_name, category = category)
-            channel = discord.utils.get(ctx.guild.text_channels, name = channel_name.lower())
-            await channel.edit(topic = f'War on {nation_link}')
+
+            channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on {nation_link}')
 
             #For loop to set permissions for members
             for member in members:
+                print(member)
                 await channel.set_permissions(member, read_messages=True, send_messages=True)
         #Lets user know that nation_link is in wring format
         else:
