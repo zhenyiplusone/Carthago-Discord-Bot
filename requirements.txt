@@ -7,3 +7,4 @@ pandas
 matplotlib
 bs4
 seaborn
+scipy
