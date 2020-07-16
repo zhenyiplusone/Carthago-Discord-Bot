@@ -8,3 +8,4 @@ matplotlib
 bs4
 seaborn
 scipy
+xlrd
