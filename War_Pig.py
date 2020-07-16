@@ -20,6 +20,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import math
+from scipy import stats
 from bs4 import BeautifulSoup
 from discord.ext import commands
 from openpyxl.styles import Font
@@ -402,7 +403,11 @@ async def graph(ctx, type, *alliances): #need to make this faster and more effic
             soup_data = BeautifulSoup(res.text, 'html.parser')
             data = soup_data.find(text = re.compile('Showing'))
             num_nations = float(data.split()[3])
-
+            if num_nations == 0:
+                await ctx.send(f'Could not find any nations in the alliance {ally.replace("+", " ").title()}, make sure it is spelled correctly')
+                label.remove(ally)
+                continue
+                
             alliance_city_data = []
             #alliance_city_data = defaultdict(lambda: 0, alliance_city_data)
 
@@ -515,10 +520,10 @@ def ping(ping_list):
 
 
 def ann(df, value):
-        Q1 = df[value].quantile(0.25)
-        Q3 = df[value].quantile(0.75)
-        IQR = Q3 - Q1
-        outliers = df[df[value] > (Q3 + 1.5 * IQR)]
+        slope, intercept, r_value, p_value, std_err = stats.linregress(df['Age'],df[value])
+        std_resid = math.sqrt((sum((df[value] - slope * df['Age'])**2))/(len(df.index)-2))
+        print(f'slope - {slope}, intercept - {intercept} std_resid - {std_resid}')
+        outliers = df[df[value] > (slope * df['Age'] + 0.8 * std_resid)]
         plt.ylim(0, None)
         plt.title(f'Scatter Plot of Nation Age Vs {value}')
         for row in outliers.iterrows():
