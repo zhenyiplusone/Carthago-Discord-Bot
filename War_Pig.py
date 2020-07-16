@@ -520,7 +520,7 @@ def ann(df, value):
         IQR = Q3 - Q1
         outliers = df[df[value] > (Q3 + 1.5 * IQR)]
         plt.ylim(0, None)
-        plt.title(value)
+        plt.title(f'Scatter Plot of Nation Age Vs {value}')
         for row in outliers.iterrows():
             r = row[1]
             plt.gca().annotate(f'{r["Leader Name"]}, {r["Cities"]}', xy=(r['Age'], r[value]), xytext=(2,2) , textcoords ="offset points", )
