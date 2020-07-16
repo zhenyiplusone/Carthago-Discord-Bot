@@ -17,6 +17,7 @@ import requests
 import time
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
 import math
 from bs4 import BeautifulSoup
@@ -328,7 +329,7 @@ async def war_info(ctx): #need to make this faster and more efficient
 async def graph(ctx, type, *alliances): #need to make this faster and more efficient
     message = await ctx.send('Generating graph... please wait a few moments')
 
-    if type == 'sphere':
+    if type == 'hist':
         alliances_data = []
         label = []
         for name in alliances:
@@ -346,7 +347,6 @@ async def graph(ctx, type, *alliances): #need to make this faster and more effic
                 label.remove(ally)
                 continue
             alliance_city_data = []
-            #alliance_city_data = defaultdict(lambda: 0, alliance_city_data)
 
             for nations in range(0, math.ceil(num_nations/3)):
                 res = requests.get(f'https://politicsandwar.com/index.php?id=15&keyword={ally}&cat=alliance&ob=score&od=DESC&maximum={50*(nations+1)}&minimum={50*nations}&search=Go&memberview=true')
@@ -359,28 +359,90 @@ async def graph(ctx, type, *alliances): #need to make this faster and more effic
             alliance_city_data = np.array(alliance_city_data)
             alliances_data.append(alliance_city_data)
 
+        #Creates graph
         fig, axes = plt.subplots(nrows=1, ncols=2)
         ax0, ax1 = axes.flatten()
         fig.set_figheight(10)
         fig.set_figwidth(20)
 
+        #Comparison histogram
         n_bins = max(list(map(lambda x: np.amax(x), alliances_data))).astype(np.int64)+1
-
         ax0.hist(alliances_data, range(n_bins+1), histtype='bar', label=label)
         ax0.legend(loc = 0)
         ax0.set_title('Comparison Graph')
         ax0.xaxis.set_ticks(np.arange(0, n_bins, 3))
         plt.setp(ax0.get_xticklabels(), rotation=30, horizontalalignment='right')
 
+        #Stacked histogram
         ax1.hist(alliances_data, range(n_bins+1), histtype='bar', stacked=True)
         ax1.set_title('Stacked Histogram')
         ax1.xaxis.set_ticks(np.arange(0, n_bins, 1))
         plt.setp(ax1.get_xticklabels(), rotation=30, horizontalalignment='right')
         fig.savefig('graph.png', dpi = 300)
 
+        #Sends file onto Discord
         pic = discord.File('graph.png', filename="graph.png")
         await message.delete()
         await ctx.send(file = pic)
+
+    if type == 'scat':
+        milplot_array = np.array([['Alliance', 'Leader Name', 'Age', 'Cities', 'Soldiers Killed', 'Soldier Casualties'\
+        , 'Tanks Killed', 'Tank Casualties', 'Planes Killed', 'Plane Casualties'\
+        , 'Ships Killed', 'Ship Casualties', 'Infra Destroyed', 'Infra Lost', 'Money Looted']], dtype = object)
+
+        html = []
+        for alliance in alliances: 
+            html.append(alliance.replace(' ', '+'))
+
+        alliances_data = []
+
+        for ally in html:
+            await message.edit(content = f'Gathering information from {ally.replace("+", " ").title()}')
+            res = requests.get(f'https://politicsandwar.com/index.php?id=15&keyword={ally}&cat=alliance&ob=score&od=DESC&maximum=15&minimum=0&search=Go&memberview=true')
+            soup_data = BeautifulSoup(res.text, 'html.parser')
+            data = soup_data.find(text = re.compile('Showing'))
+            num_nations = float(data.split()[3])
+
+            alliance_city_data = []
+            #alliance_city_data = defaultdict(lambda: 0, alliance_city_data)
+
+            for nations in range(0, math.ceil(num_nations/3)):
+                res = requests.get(f'https://politicsandwar.com/index.php?id=15&keyword={ally}&cat=alliance&ob=score&od=DESC&maximum={50*(nations+1)}&minimum={50*nations}&search=Go&memberview=true')
+                soup_data = BeautifulSoup(res.text, 'html.parser')
+                data = soup_data.find_all("a", href=re.compile("politicsandwar.com/nation/id="))
+                links = []
+
+                for nation_link in data:
+                    links.append(nation_link['href'])
+
+                for nation_link in links:
+                    mil = req_info(nation_link)
+
+                    member_info = [mil['alliance'], mil['leadername'], int(mil['daysold']), mil['cities'],\
+                        int(mil['soldierskilled']), int(mil['soldiercasualties']),int(mil['tankskilled']),int(mil['tankcasualties']),\
+                        int(mil['aircraftkilled']),int(mil['aircraftcasualties']),int(mil['shipskilled']),int(mil['shipcasualties']),\
+                        float(mil['infdesttot']),int(mil['infraLost']),float(mil['moneyLooted'])]
+
+                    temp_arr = np.array([member_info], dtype = object)
+
+                    milplot_array = np.append(milplot_array, temp_arr, axis=0)
+        await message.edit(content = f'Creating Graph')
+        mil = pd.DataFrame(milplot_array[1:], range(len(milplot_array)-1), milplot_array[0])
+        mil.to_excel('Excel_Sample.xlsx', sheet_name = 'Sheet1')
+        df = pd.read_excel('Excel_Sample.xlsx', sheet_name = 'Sheet1')
+        print(mil.head())
+
+        stuff_to_graph = ['Money Looted', 'Infra Destroyed', 'Planes Killed']
+
+        await message.delete()
+
+        for image in stuff_to_graph:
+            scattered0 = sns.lmplot(x = 'Age', y = image, data = df, hue = 'Alliance')
+            ann(df, image)
+            scattered0.savefig(f"Scatter Plot Of {image}.png")
+
+            pic = discord.File(f"Scatter Plot Of {image}.png", filename=f"Scatter Plot Of {image}.png")
+            await ctx.send(file = pic)
 
 async def coord_perms(members, channel, channel_name, ctx):
     ''' 
@@ -449,6 +511,19 @@ def ping(ping_list):
     for member in ping_list:
         ping_str += f'<@{str(member)}> '
     return ping_str
+
+
+
+def ann(df, value):
+        Q1 = df[value].quantile(0.25)
+        Q3 = df[value].quantile(0.75)
+        IQR = Q3 - Q1
+        outliers = df[df[value] > (Q3 + 1.5 * IQR)]
+        plt.ylim(0, None)
+        plt.title(value)
+        for row in outliers.iterrows():
+            r = row[1]
+            plt.gca().annotate(f'{r["Leader Name"]}, {r["Cities"]}', xy=(r['Age'], r[value]), xytext=(2,2) , textcoords ="offset points", )
 
 
 
