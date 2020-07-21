@@ -185,9 +185,11 @@ async def create_chan(ctx, nation_link, *members: discord.Member):
             channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on {nation_link}')
 
             #For loop to set permissions for members
+            ping = ''
             for member in members:
-                print(member)
                 await channel.set_permissions(member, read_messages=True, send_messages=True)
+                ping = ping + f'<@{member.id}> '
+            await channel.send(f'{ping}please declare war on {nation_link}')
         #Lets user know that nation_link is in wring format
         else:
             await ctx.send('Nation link format is wrong, must be politicsandwar.com/nation/id=xxxxx')
@@ -407,7 +409,7 @@ async def graph(ctx, type, *alliances): #need to make this faster and more effic
                 await ctx.send(f'Could not find any nations in the alliance {ally.replace("+", " ").title()}, make sure it is spelled correctly')
                 label.remove(ally)
                 continue
-                
+
             alliance_city_data = []
             #alliance_city_data = defaultdict(lambda: 0, alliance_city_data)
 
