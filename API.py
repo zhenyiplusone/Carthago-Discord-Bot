@@ -11,7 +11,7 @@ def get_pnw_name(link):
     :returns: name of the nation
     """
     req = req_info(link)
-    return req.get('name')
+    return req['name']
 
 
 
@@ -22,7 +22,7 @@ def get_leader(id):
     :returns: leader of the nation
     """
     req = ID_info(id)
-    return req.get('leadername')
+    return req['leadername']
 
 
 
@@ -69,7 +69,7 @@ def get_war_IDs(link):
     :returns: war IDs of both offensive and defensive wars
     '''
     req = req_info(link)
-    war_ids = req['offensivewar_ids'] + req.get['defensivewar_ids']
+    war_ids = req['offensivewar_ids'] + req['defensivewar_ids']
     return war_ids
 
 
