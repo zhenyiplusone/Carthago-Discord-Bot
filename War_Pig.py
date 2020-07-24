@@ -42,7 +42,8 @@ member_names = ['Azrael','New Suleiman','Daveth','Locinii','Lothair of Acre','Gr
 'Ion Constantinescu','Zeannon','Uhsnadev','Shawn Washington','the Rising Sun',
 'Wilhelm-Augustus','NotCool','Cthulhu The Devourer','Strett','Antonio','Tyras Calidan',
 'Waldo','KingDracula','Leigh','Gust','CaN','Madder Red','Germania','El Chach','Solomoriah',
-'Zegrath the Black', 'EvilPiggyFooFoo']
+'Zegrath the Black', 'EvilPiggyFooFoo', 'Romanov', 'Novorossiya', 'Filedsome','Karl the not Blessed',
+'Shamadruu','Misha Polikarpov']
 
 dis_id = [203472925737746432,252246017725038593,285413989658263552,305437895538507780,537421144731549707,
 323631619456106507,401403136171835415,401145199310667783,369554334431838208,616473001189441541,398868908724977675,
@@ -51,9 +52,16 @@ dis_id = [203472925737746432,252246017725038593,285413989658263552,3054378955385
 294156214454190083,367273586102239234,315607812149608458,380826721634746388,582844188760997908,197031131093139465,
 456554347963088909,154719217558618113,111543344521302016,441584968838152192,415335544541937665,458799865271418892,
 339330441603710977,328153663984107521,174116297951412225,400787601503682597,465869010936922112,669983109986385965,
-404132209692508160, 236978935538122754]
+404132209692508160, 236978935538122754,274757222528057344, 720666834562711554, 594794583204823041, 711090812439756833,
+181502175476711425, 208495718376275968]
+
+nation_id = [90038,36823,60766,205677,174178,207627,105773,207541,123779,206764,127170,
+68432,93798,211650,92845,146455,192256,203465,208360,117448,112098,116152,84969,194419,
+205543,118419,215354,163576,217361,125354,109837,21196,117241,125702,196166,76312,134372,
+148081,99210,128633,195412,204729, 48730,195344,207245, 212190, 213815, 234558, 231415]
 
 member_dict = dict(zip(member_names, dis_id))
+nation_dict = dict(zip(dis_id, nation_id))
 
 @client.event
 async def on_ready():
@@ -103,19 +111,35 @@ async def bulk_create(ctx):
                     #Creates the channel and edits the topic
                     channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on {row[0]}')
                     
-                    #Gets the permissions for the members set up and pings them
-                    ping_list = await coord_perms(attackers, channel, channel_name, ctx)
-                    await channel.send(f"{ping(ping_list)}please declare war on {row[0]}\
-                    \n 1.) Make sure you have enough resources including food and uranium, ping gov if you need more\
-                    \n 2.) Look over their military and each other's before going in and plan out the best move\
-                    \n 3.) Talk and coordinate with fellow members, declare at the same time and help each other\
-                    \n Good luck!") 
-                    def_ping_list = await coord_perms(defenders, channel, channel_name, ctx)
-                    if len(def_ping_list) != 0:
-                        await channel.send(f'{ping(def_ping_list)}is/are defending against {target_name}') 
-                    mil_count = get_pnw_mil(f'https://politicsandwar.com/nation/id={target_id}')
-                    await channel.send(f'{target_name} has {mil_count["Soldiers"]} soldiers, {mil_count["Tanks"]} tanks, {mil_count["Planes"]} planes, and {mil_count["Ships"]} ships') 
 
+                    war_embed = discord.Embed(title= f"⚔️ __Target: {channel_name.split('-')[0]}__", 
+                        description= f"Please declare war on {row[0]}", color=0xcb2400,
+                        url = f'https://politicsandwar.com/nation/war/declare/id={row[0].split("=")[1]}')
+
+
+                    mil_count = get_pnw_mil(f'https://politicsandwar.com/nation/id={row[0].split("=")[1]}')
+
+                    war_embed.add_field(name = '__Military Information:__', value = f'{channel_name.split("-")[0]} has {mil_count["Soldiers"]} soldiers, {mil_count["Tanks"]} tanks, {mil_count["Planes"]} planes, and {mil_count["Ships"]} ships', inline = False)
+
+                    ping_list = await coord_perms(attackers, channel, channel_name, ctx)
+                    for index, member in enumerate(ping_list): 
+                        link = f'https://politicsandwar.com/nation/id={nation_dict.get(member, "N/A")}'
+                        war_embed.add_field(name= f"__Attacker {index + 1}:__", value=f"[{client.get_user(member).name}]({link})", inline=True)
+
+                    def_ping_list = await coord_perms(defenders, channel, channel_name, ctx)
+                    for index, member in enumerate(def_ping_list): 
+                        link = f'https://politicsandwar.com/nation/id={nation_dict.get(member, "N/A")}'
+                        war_embed.add_field(name= f"__Defender {index + 1}:__", value=f"[{client.get_user(member).name}]({link})", inline=True)
+
+                    war_embed.add_field(name="__Reminder__", value="1.) Make sure you have enough resources including food and uranium, ping gov if you need more\
+                            \n 2.) Look over their military before going in and plan out the best move\
+                            \n 3.) Talk and coordinate with fellow members, declare at the same time and help each other\
+                            \n Good luck!", inline=False)
+
+                    await channel.send(f'{ping(ping_list)}{ping(def_ping_list)}',embed = war_embed)
+
+                    #Gets the permissions for the members set up and pings them
+                    
                 line += 1
 
             await ctx.send('Channels are finished being create, good luck in the wars to come!')
@@ -189,7 +213,26 @@ async def create_chan(ctx, nation_link, *members: discord.Member):
             for member in members:
                 await channel.set_permissions(member, read_messages=True, send_messages=True)
                 ping = ping + f'<@{member.id}> '
-            await channel.send(f'{ping}please declare war on {nation_link}')
+            war_embed = discord.Embed(title= f"⚔️ __Target: {channel_name.split('-')[0]}__", 
+                description= f"Please declare war on {nation_link}", color=0xcb2400,
+                url = f'https://politicsandwar.com/nation/war/declare/id={nation_link.split("=")[1]}')
+
+
+            mil_count = get_pnw_mil(f'https://politicsandwar.com/nation/id={nation_link.split("=")[1]}')
+
+            war_embed.add_field(name = '__Military Information:__', value = f'{channel_name.split("-")[0]} has {mil_count["Soldiers"]} soldiers, {mil_count["Tanks"]} tanks, {mil_count["Planes"]} planes, and {mil_count["Ships"]} ships', inline = False)
+
+            for index, member in enumerate(members): 
+                link = f'https://politicsandwar.com/nation/id={nation_dict.get(member.id, "N/A")}'
+                war_embed.add_field(name= f"__Attacker {index + 1}:__", value=f"[{member.name}]({link})", inline=True)
+           
+            war_embed.add_field(name="__Reminder__", value="1.) Make sure you have enough resources including food and uranium, ping gov if you need more\
+                    \n 2.) Look over their military before going in and plan out the best move\
+                    \n 3.) Talk and coordinate with fellow members, declare at the same time and help each other\
+                    \n Good luck!", inline=False)
+
+            await channel.send(f'{ping}',embed = war_embed)
+
         #Lets user know that nation_link is in wring format
         else:
             await ctx.send('Nation link format is wrong, must be politicsandwar.com/nation/id=xxxxx')
@@ -606,15 +649,17 @@ async def create_chan_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.send('Missing required argument, the correct format is:\
             !create_chan [nation_link] @member @member ... etc')
+    else:
+        await ctx.send(error)
 
 #If the command is on cooldown
 @war_info.error
-async def create_chan_error(ctx, error):
+async def war_info_error(ctx, error):
     if isinstance(error, commands.CommandOnCooldown):
         await ctx.send(f'The command is on cooldown for this channel, please try again in {error.retry_after:.3g} seconds')
 
 @graph.error
-async def create_chan_error(ctx, error):
+async def graph_error(ctx, error):
     if isinstance(error, commands.CommandOnCooldown):
         await ctx.send(f'The command is on cooldown for you, please try again in {error.retry_after:.3g} seconds')
 
