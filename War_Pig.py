@@ -20,6 +20,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import math
+import gspread
 from scipy import stats
 from bs4 import BeautifulSoup
 from discord.ext import commands
@@ -36,7 +37,12 @@ from openpyxl import load_workbook
 
 client = commands.Bot(command_prefix = '!')
 
-member_names = ['Azrael','New Suleiman','Daveth','Locinii','Lothair of Acre','GrandmasterBee','Bmber',
+
+gaccount = gspread.service_account(filename = 'war pig-9478580af5de.json')
+
+gsheet = gaccount.open("Discord Tracking Sheet").sheet1
+
+'''member_names = ['Azrael','New Suleiman','Daveth','Locinii','Lothair of Acre','GrandmasterBee','Bmber',
 'Aaron Comneno','Asierith','Auto Von Bismarck','Ragnarok8085','Tamasith','Velium','Thibaud Brent',
 'Billy','Petko Vidmar','Roach','Al Sahina','Patro','Yuri B Molotov','Miyamoto Musashi',
 'Ion Constantinescu','Zeannon','Uhsnadev','Shawn Washington','the Rising Sun',
@@ -58,10 +64,7 @@ dis_id = [203472925737746432,252246017725038593,285413989658263552,3054378955385
 nation_id = [90038,36823,60766,205677,174178,207627,105773,207541,123779,206764,127170,
 68432,93798,211650,92845,146455,192256,203465,208360,117448,112098,116152,84969,194419,
 205543,118419,215354,163576,217361,125354,109837,21196,117241,125702,196166,76312,134372,
-148081,99210,128633,195412,204729, 48730,195344,207245, 212190, 213815, 234558, 231415]
-
-member_dict = dict(zip(member_names, dis_id))
-nation_dict = dict(zip(dis_id, nation_id))
+148081,99210,128633,195412,204729, 48730,195344,207245, 212190, 213815, 234558, 231415]'''
 
 @client.event
 async def on_ready():
@@ -96,6 +99,7 @@ async def bulk_create(ctx):
         with open(f'csv/{attachment.filename}') as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=',')
             line = 0
+            update_dict()
             #Goes through each row to create channels
             for row in csv_reader:
                 #Makes sure this is not the heading and it isn't an invalid row before creating a channel
@@ -139,7 +143,7 @@ async def bulk_create(ctx):
                     await channel.send(f'{ping(ping_list)}{ping(def_ping_list)}',embed = war_embed)
 
                     #Gets the permissions for the members set up and pings them
-                    
+
                 line += 1
 
             await ctx.send('Channels are finished being create, good luck in the wars to come!')
@@ -207,7 +211,7 @@ async def create_chan(ctx, nation_link, *members: discord.Member):
             channel_name = get_pnw_name(nation_link).replace(' ', '-') + '-' + nation_link.split('=')[1]
 
             channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on {nation_link}')
-
+            update_dict()
             #For loop to set permissions for members
             ping = ''
             for member in members:
@@ -559,6 +563,7 @@ async def coord_perms(members, channel, channel_name, ctx):
         #Only adds them if they're valid values
         if member != '#ERROR!' and member != '' and member != '#VALUE!':
             discord_name = member_list(member)
+            print(ctx.guild.get_member(discord_name))
             #Makes sure that it adds valid users
             if discord_name != '':
                 await channel.set_permissions(ctx.guild.get_member(discord_name), read_messages=True, send_messages=True)
@@ -597,7 +602,7 @@ def member_list(leader_name):
 
     :returns: The Discord ID of the member
     '''
-
+    print(member_dict)
     return member_dict.get(leader_name, '')
 
 
@@ -633,6 +638,21 @@ def ann(df, value):
     for row in outliers.iterrows():
         r = row[1]
         plt.gca().annotate(f'{r["Leader Name"]}, {r["Cities"]}', xy=(r['Age'], r[value]), xytext=(2,2) , textcoords ="offset points", )
+
+
+
+def update_dict():
+        member_names = gsheet.col_values(1)
+        member_names.pop(0)
+        nation_id = gsheet.col_values(2)
+        nation_id.pop(0)
+        dis_id = gsheet.col_values(4)
+        dis_id.pop(0)
+        nation_id = list(map(int, nation_id))
+        dis_id = list(map(int, dis_id))
+        member_dict = dict(zip(member_names, dis_id))
+        nation_dict = dict(zip(dis_id, nation_id))    
+
 
 
 
