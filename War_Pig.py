@@ -41,6 +41,17 @@ client = commands.Bot(command_prefix = '!')
 gaccount = gspread.service_account(filename = 'war pig-9478580af5de.json')
 
 gsheet = gaccount.open("Discord Tracking Sheet").sheet1
+member_names = gsheet.col_values(1)
+member_names.pop(0)
+nation_id = gsheet.col_values(2)
+nation_id.pop(0)
+dis_id = gsheet.col_values(4)
+dis_id.pop(0)
+nation_id = list(map(int, nation_id))
+dis_id = list(map(int, dis_id))
+member_dict = dict(zip(member_names, dis_id))
+nation_dict = dict(zip(dis_id, nation_id))    
+
 
 '''member_names = ['Azrael','New Suleiman','Daveth','Locinii','Lothair of Acre','GrandmasterBee','Bmber',
 'Aaron Comneno','Asierith','Auto Von Bismarck','Ragnarok8085','Tamasith','Velium','Thibaud Brent',
