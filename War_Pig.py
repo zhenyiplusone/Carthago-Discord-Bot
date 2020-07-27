@@ -139,12 +139,12 @@ async def bulk_create(ctx):
                     ping_list = await coord_perms(attackers, channel, channel_name, ctx)
                     for index, member in enumerate(ping_list): 
                         link = f'https://politicsandwar.com/nation/id={nation_dict.get(member, "N/A")}'
-                        war_embed.add_field(name= f"__Attacker {index + 1}:__", value=f"[{client.get_user(member).name}]({link})", inline=True)
+                        war_embed.add_field(name= f"__Attacker {index + 1}:__", value=f"[{client.get_user(member).display_namedisplay_name}]({link})", inline=True)
 
                     def_ping_list = await coord_perms(defenders, channel, channel_name, ctx)
                     for index, member in enumerate(def_ping_list): 
                         link = f'https://politicsandwar.com/nation/id={nation_dict.get(member, "N/A")}'
-                        war_embed.add_field(name= f"__Defender {index + 1}:__", value=f"[{client.get_user(member).name}]({link})", inline=True)
+                        war_embed.add_field(name= f"__Defender {index + 1}:__", value=f"[{client.get_user(member).display_name}]({link})", inline=True)
 
                     war_embed.add_field(name="__Reminder__", value="1.) Make sure you have enough resources including food and uranium, ping gov if you need more\
                             \n 2.) Look over their military before going in and plan out the best move\
@@ -205,7 +205,7 @@ async def run_test_sheet(ctx):
 
 
 @client.command()
-async def create_chan(ctx, nation_link, *members: discord.Member):
+async def create_chan(ctx, nation_link, reason = None, *members: discord.Member):
     ''' 
     Creates a channel using nation link and the list of members to add to it
 
@@ -223,13 +223,24 @@ async def create_chan(ctx, nation_link, *members: discord.Member):
 
             channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on {nation_link}')
             update_dict()
+
+            if re.match(r'<@!\d{18}\>', reason):
+                id = int(reason.split('!')[1].split('>')[0])
+                print(id)
+                print(client.get_user(int(reason.split('!')[1].split('>')[0])))
+                members += (client.get_user(id),)
+                reason = ''
             #For loop to set permissions for members
             ping = ''
             for member in members:
                 await channel.set_permissions(member, read_messages=True, send_messages=True)
                 ping = ping + f'<@{member.id}> '
+            
+            if reason != '':
+                reason = reason.replace('-', ' ')
+                reason = f', war reason: {reason}'
             war_embed = discord.Embed(title= f"⚔️ __Target: {channel_name.split('-')[0]}__", 
-                description= f"Please declare war on {nation_link}", color=0xcb2400,
+                description= f"Please declare war on {nation_link}{reason}", color=0xcb2400,
                 url = f'https://politicsandwar.com/nation/war/declare/id={nation_link.split("=")[1]}')
 
 
@@ -239,7 +250,7 @@ async def create_chan(ctx, nation_link, *members: discord.Member):
 
             for index, member in enumerate(members): 
                 link = f'https://politicsandwar.com/nation/id={nation_dict.get(member.id, "N/A")}'
-                war_embed.add_field(name= f"__Attacker {index + 1}:__", value=f"[{member.name}]({link})", inline=True)
+                war_embed.add_field(name= f"__Attacker {index + 1}:__", value=f"[{member.display_name}]({link})", inline=True)
            
             war_embed.add_field(name="__Reminder__", value="1.) Make sure you have enough resources including food and uranium, ping gov if you need more\
                     \n 2.) Look over their military before going in and plan out the best move\
@@ -444,7 +455,7 @@ async def graph(ctx, type, *alliances):
             alliance_city_data = []
 
             #Grabs data for every nation in the alliance
-            for nations in range(0, math.ceil(num_nations/3)):
+            for nations in range(0, math.ceil(num_nations/50)):
                 res = requests.get(f'https://politicsandwar.com/index.php?id=15&keyword={ally}&cat=alliance&ob=score&od=DESC&maximum={50*(nations+1)}&minimum={50*nations}&search=Go&memberview=true')
                 soup_data = BeautifulSoup(res.text, 'html.parser')
                 data = soup_data.find_all("td", attrs={"class": "right"}, text = re.compile(r'^[1-9]\d*$'))
