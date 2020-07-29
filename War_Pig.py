@@ -50,7 +50,8 @@ dis_id.pop(0)
 nation_id = list(map(int, nation_id))
 dis_id = list(map(int, dis_id))
 member_dict = dict(zip(member_names, dis_id))
-nation_dict = dict(zip(dis_id, nation_id))    
+nation_dict = dict(zip(dis_id, nation_id))  
+rev_nation_dict = dict(zip(nation_id, dis_id))   
 
 
 '''member_names = ['Azrael','New Suleiman','Daveth','Locinii','Lothair of Acre','GrandmasterBee','Bmber',
@@ -419,7 +420,7 @@ async def war_info(ctx):
 
 
 @client.command()
-@commands.cooldown(1, 60, commands.BucketType.user)
+@commands.cooldown(1, 30, commands.BucketType.user)
 async def graph(ctx, type, *alliances): 
     '''
     Graphs specific information for alliances
@@ -522,7 +523,7 @@ async def graph(ctx, type, *alliances):
             #alliance_city_data = defaultdict(lambda: 0, alliance_city_data)
 
             #Goes to every nation in the alliance to grab military information
-            for nations in range(0, math.ceil(num_nations/3)):
+            for nations in range(0, math.ceil(num_nations/50)):
                 res = requests.get(f'https://politicsandwar.com/index.php?id=15&keyword={ally}&cat=alliance&ob=score&od=DESC&maximum={50*(nations+1)}&minimum={50*nations}&search=Go&memberview=true')
                 soup_data = BeautifulSoup(res.text, 'html.parser')
                 data = soup_data.find_all("a", href=re.compile("politicsandwar.com/nation/id="))
@@ -569,6 +570,24 @@ async def graph(ctx, type, *alliances):
 
 
 
+@client.command()
+async def add(ctx, type, *nations): 
+    if type == 'attacker' or type == 'attackers' or type == 'atker' or type == 'atkers' or type == 'atk' or type == 'atks' or type == 'attack' or type == 'attacks':
+        ping = await add_to_chan(ctx, nations)
+        if len(ping) != 0:
+            ping_list = ' '.join([f'<@{member}>' for member in ping])
+            await ctx.send(f'{ping_list} please read above and declare war on {ctx.channel.topic.split()[2]}.')
+
+    elif type == 'defender' or type == 'defenders' or type == 'def' or type == 'defs' or type == 'defend' or type == 'defense':
+        ping = await add_to_chan(ctx, nations)
+        if len(ping) != 0:
+            ping_list = ' '.join([f'<@{member}>' for member in ping])
+            target = " ".join(ctx.channel.name.split('-')[:-1])
+            await ctx.send(f'{ping_list} is defending. Please coordinate with the other Carthago members here for the war against {target.title()}.')
+    else:
+        await ctx.send('Invalid command format. Please do !add <atk/def> <nation link/id> <nation link/id> etc.')
+
+
 
 async def coord_perms(members, channel, channel_name, ctx):
     ''' 
@@ -600,6 +619,27 @@ async def coord_perms(members, channel, channel_name, ctx):
     #Returns it if there were no invalid users and the loop has reached its end
     else:
         return people_to_ping
+
+
+
+
+async def add_to_chan(ctx, nations):
+    update_dict()
+    members = []
+    for nation in nations:
+        if(re.search(r'politicsandwar.com/nation/id=\d{1,7}', nation)) and int(nation.split('=')[1]) in rev_nation_dict:
+            member = ctx.guild.get_member(rev_nation_dict[int(nation.split('=')[1])])
+            await ctx.channel.set_permissions(member, read_messages=True, send_messages=True)
+            members.append(rev_nation_dict[int(nation.split('=')[1])])
+
+        elif(re.match(r'\d{1,7}', nation)) and int(nation) in rev_nation_dict:
+            member = ctx.guild.get_member(rev_nation_dict[int(nation)])
+            await ctx.channel.set_permissions(member, read_messages=True, send_messages=True)
+            members.append(rev_nation_dict[int(nation)])
+            
+        else:
+            await ctx.send(f"Couldn't find member {nation}, either the member sheet is not updated or it is not a nation link/nation ID.")
+    return members
 
 '''
 @client.command()
