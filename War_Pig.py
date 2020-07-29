@@ -140,7 +140,7 @@ async def bulk_create(ctx):
                     ping_list = await coord_perms(attackers, channel, channel_name, ctx)
                     for index, member in enumerate(ping_list): 
                         link = f'https://politicsandwar.com/nation/id={nation_dict.get(member, "N/A")}'
-                        war_embed.add_field(name= f"__Attacker {index + 1}:__", value=f"[{client.get_user(member).display_namedisplay_name}]({link})", inline=True)
+                        war_embed.add_field(name= f"__Attacker {index + 1}:__", value=f"[{client.get_user(member).display_name}]({link})", inline=True)
 
                     def_ping_list = await coord_perms(defenders, channel, channel_name, ctx)
                     for index, member in enumerate(def_ping_list): 
