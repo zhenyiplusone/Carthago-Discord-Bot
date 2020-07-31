@@ -431,7 +431,7 @@ async def graph(ctx, type, *alliances):
     message = await ctx.send('Generating graph... please wait a few moments')
 
     #graphs histogram 
-    if type == 'hist':
+    if re.search('hist', type):
         alliances_data = []
         label = []
 
@@ -475,6 +475,10 @@ async def graph(ctx, type, *alliances):
 
         #Comparison histogram
         n_bins = max(list(map(lambda x: np.amax(x), alliances_data))).astype(np.int64)+1
+        if type == 'hist-static' or type == 'hist-static':
+            n_bins = 45
+            ax0.set_ylim(0, 100)
+            ax1.set_ylim(0, 100)
         ax0.hist(alliances_data, range(n_bins+1), histtype='bar', label=label)
         ax0.legend(loc = 0)
         ax0.set_title('Comparison Graph')
@@ -494,7 +498,7 @@ async def graph(ctx, type, *alliances):
         await ctx.send(file = pic)
 
     #Graphs for scatter plot with military informationS
-    elif type == 'scatter':
+    elif re.search('scat', type):
         milplot_array = np.array([['Alliance', 'Leader Name', 'Age', 'Cities', 'Soldiers Killed', 'Soldier Casualties'\
         , 'Tanks Killed', 'Tank Casualties', 'Planes Killed', 'Plane Casualties'\
         , 'Ships Killed', 'Ship Casualties', 'Infra Destroyed', 'Infra Lost', 'Money Looted']], dtype = object)
@@ -566,17 +570,24 @@ async def graph(ctx, type, *alliances):
             await ctx.send(file = pic)
    #If type is something weird
     else:
-        await ctx.send(f'We are unable to identify graph type: {type}. The valid graph types are hist and scatter.')
+        await ctx.send(f'We are unable to identify graph type: {type}. The valid graph types are hist/hist-static and scatter.')
+
 
 
 
 @client.command()
-async def add(ctx, type, *nations): 
+async def add(ctx, type, reason = None, *nations): 
+    reason = reason.replace('-', ' ')
+    reason = f'The war reason is: {reason}'
+    if re.search(r'\d{1,7}', reason):
+        nations += (reason,)
+        reason = ''
+
     if type == 'attacker' or type == 'attackers' or type == 'atker' or type == 'atkers' or type == 'atk' or type == 'atks' or type == 'attack' or type == 'attacks':
         ping = await add_to_chan(ctx, nations)
         if len(ping) != 0:
             ping_list = ' '.join([f'<@{member}>' for member in ping])
-            await ctx.send(f'{ping_list} please read above and declare war on {ctx.channel.topic.split()[2]}.')
+            await ctx.send(f'{ping_list} please read above and declare war on {ctx.channel.topic.split()[2]}. {reason}')
 
     elif type == 'defender' or type == 'defenders' or type == 'def' or type == 'defs' or type == 'defend' or type == 'defense':
         ping = await add_to_chan(ctx, nations)
