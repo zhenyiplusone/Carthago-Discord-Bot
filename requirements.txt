@@ -10,3 +10,4 @@ seaborn
 scipy
 xlrd
 gspread
+excel2img
