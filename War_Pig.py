@@ -211,6 +211,7 @@ async def create_chan(ctx, nation_link, reason = None, *members: discord.Member)
     Creates a channel using nation link and the list of members to add to it
 
     :param nation_link: PnW link of nation that is the target
+    :param reason: Reason (optional) for the war, you can leave it blank. Dashes "-" in place of spaces for reason.
     :param *members: Discord members to add to the channel
     '''
     category = discord.utils.get(ctx.guild.categories, name = '[CANNAE BUT COUNTER]')
@@ -225,6 +226,7 @@ async def create_chan(ctx, nation_link, reason = None, *members: discord.Member)
             channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on {nation_link}')
             update_dict()
 
+            #Checks to make sure it is a war reason and not a member
             if re.match(r'<@!\d{18}\>', reason):
                 id = int(reason.split('!')[1].split('>')[0])
                 print(id)
@@ -237,9 +239,11 @@ async def create_chan(ctx, nation_link, reason = None, *members: discord.Member)
                 await channel.set_permissions(member, read_messages=True, send_messages=True)
                 ping = ping + f'<@{member.id}> '
             
+            #If it is a valid war reason, replace dashes with spaces
             if reason != '':
                 reason = reason.replace('-', ' ')
                 reason = f', war reason: {reason}'
+
             war_embed = discord.Embed(title= f"⚔️ __Target: {channel_name.split('-')[0]}__", 
                 description= f"Please declare war on {nation_link}{reason}", color=0xcb2400,
                 url = f'https://politicsandwar.com/nation/war/declare/id={nation_link.split("=")[1]}')
@@ -577,24 +581,38 @@ async def graph(ctx, type, *alliances):
 
 @client.command()
 async def add(ctx, type, reason = None, *nations): 
+    ''' 
+    Adds member to existing war channel
+
+    :param type: Indicate if added members are attackers or defenders
+    :param reason: The (optional) reason for war, you can leave this blank. Dashes "-" in place of spaces for reason.
+    :param nations: Nation link or ID of list of members to add
+    ''' 
     reason = reason.replace('-', ' ')
     reason = f'The war reason is: {reason}'
+    #Clears the war reason if it doesn't exist and in place is a nation link/ID
     if re.search(r'\d{1,7}', reason):
         nations += (reason,)
         reason = ''
 
+    #If members to be added are attackers
     if type == 'attacker' or type == 'attackers' or type == 'atker' or type == 'atkers' or type == 'atk' or type == 'atks' or type == 'attack' or type == 'attacks':
         ping = await add_to_chan(ctx, nations)
+        #If you couldn't find any of the members there is no point to ping, so this check exists
         if len(ping) != 0:
             ping_list = ' '.join([f'<@{member}>' for member in ping])
             await ctx.send(f'{ping_list} please read above and declare war on {ctx.channel.topic.split()[2]}. {reason}')
 
+    #If members to be added are defenders
     elif type == 'defender' or type == 'defenders' or type == 'def' or type == 'defs' or type == 'defend' or type == 'defense':
         ping = await add_to_chan(ctx, nations)
+        #If you couldn't find any of the members there is no point to ping, so this check exists
         if len(ping) != 0:
             ping_list = ' '.join([f'<@{member}>' for member in ping])
             target = " ".join(ctx.channel.name.split('-')[:-1])
             await ctx.send(f'{ping_list} is defending. Please coordinate with the other Carthago members here for the war against {target.title()}.')
+   
+    #If it is an invalid type of war
     else:
         await ctx.send('Invalid command format. Please do !add <atk/def> <nation link/id> <nation link/id> etc.')
 
@@ -635,14 +653,23 @@ async def coord_perms(members, channel, channel_name, ctx):
 
 
 async def add_to_chan(ctx, nations):
+    ''' 
+    Finds the members given the nation link and sets up permission for them
+
+    :param nations: List of nations to be added
+    :returns: Discord ID of list of people to ping
+    ''' 
     update_dict()
     members = []
+    #For loop that goes through every nation in nations to find them
     for nation in nations:
+        #If it is a link
         if(re.search(r'politicsandwar.com/nation/id=\d{1,7}', nation)) and int(nation.split('=')[1]) in rev_nation_dict:
             member = ctx.guild.get_member(rev_nation_dict[int(nation.split('=')[1])])
             await ctx.channel.set_permissions(member, read_messages=True, send_messages=True)
             members.append(rev_nation_dict[int(nation.split('=')[1])])
 
+        #If it is an ID
         elif(re.match(r'\d{1,7}', nation)) and int(nation) in rev_nation_dict:
             member = ctx.guild.get_member(rev_nation_dict[int(nation)])
             await ctx.channel.set_permissions(member, read_messages=True, send_messages=True)
