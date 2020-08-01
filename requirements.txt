@@ -11,4 +11,4 @@ scipy
 xlrd
 gspread
 excel2img
-pywin32==223
+pywin32==228
