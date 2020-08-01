@@ -408,6 +408,7 @@ async def war_info(ctx):
 
         #excel2img.export_img("spreadsheet/War.xlsx","spreadsheet/image.png","War Scenario Sheet")
         #image = discord.File("spreadsheet/image.png", filename="war_screen.png")
+
         sheet = discord.File('spreadsheet/War.xlsx', filename="war_sheet.xlsx")
         await message.delete()
         await ctx.send(file = sheet)
@@ -615,6 +616,55 @@ async def add(ctx, type, reason = None, *nations):
     #If it is an invalid type of war
     else:
         await ctx.send('Invalid command format. Please do !add <atk/def> <nation link/id> <nation link/id> etc.')
+
+
+
+
+@client.command()
+async def bulk_ops(ctx):
+    '''
+    Creates a list of channels based on csv target list
+    '''
+    category = discord.utils.get(ctx.guild.categories, name = '[CANNAE BUT COUNTER]')
+
+    #Sees if the user has permissions to manage channels in the category and access bot
+    if category.permissions_for(ctx.author).manage_channels:
+        
+        #for loop to get attachment
+        for attachment in ctx.message.attachments:
+            await attachment.save(f'csv/{attachment.filename}')
+            await ctx.send('Sending DMs for spy ops')
+            break
+        #If no attachment is found
+        else:
+            await ctx.send('No Attachment Found')
+
+        #Access attachment and creates channels with it
+        with open(f'csv/{attachment.filename}') as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            line = 0
+            update_dict()
+            #Goes through each row to create channels
+            for row in csv_reader:
+                #Makes sure this is not the heading and it isn't an invalid row before creating a channel
+                if line != 0 and row[1] != '':
+                    target_link = row[1]
+                    goal = row[2]
+                    ops = [row[3], row[4], row[5]]
+
+                    #Creates the channel and edits the topic
+
+                line += 1
+
+            await ctx.send('Channels are finished being create, good luck in the wars to come!')
+    #If they don't have permission, tell them
+    else:
+        await ctx.send('You do not have permissions to create war channels')
+
+
+
+
+
 
 
 
