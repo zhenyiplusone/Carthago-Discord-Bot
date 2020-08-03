@@ -138,20 +138,31 @@ async def bulk_create(ctx):
                     war_embed.add_field(name = '__Military Information:__', value = f'{channel_name.split("-")[0]} has {mil_count["Soldiers"]} soldiers, {mil_count["Tanks"]} tanks, {mil_count["Planes"]} planes, and {mil_count["Ships"]} ships', inline = False)
 
                     ping_list = await coord_perms(attackers, channel, channel_name, ctx)
+                    #Gets DM list for members to attack and puts out their nation link
                     for index, member in enumerate(ping_list): 
                         link = f'https://politicsandwar.com/nation/id={nation_dict.get(member, "N/A")}'
-                        war_embed.add_field(name= f"__Attacker {index + 1}:__", value=f"[{client.get_user(member).display_name}]({link})", inline=True)
-
+                        user = client.get_user(member)
+                        war_embed.add_field(name= f"__Attacker {index + 1}:__", value=f"[{user.display_name}]({link})", inline=True)
+                        try:
+                            await user.send(content = f"It's time to send in the elephants! Please check <#{channel.id}> for your war assignment. Thank You!")
+                        except: 
+                            await ctx.send(f'Could not DM {user.name} because they have disabled DMs with bots, please message them manually.')
                     def_ping_list = await coord_perms(defenders, channel, channel_name, ctx)
+                    
+                    ##Gets DM list for defending members and puts out their nation link
                     for index, member in enumerate(def_ping_list): 
                         link = f'https://politicsandwar.com/nation/id={nation_dict.get(member, "N/A")}'
-                        war_embed.add_field(name= f"__Defender {index + 1}:__", value=f"[{client.get_user(member).display_name}]({link})", inline=True)
-
+                        user = client.get_user(member)
+                        war_embed.add_field(name= f"__Defender {index + 1}:__", value=f"[{user.display_name}]({link})", inline=True)
+                        try:
+                            await user.send(content = f"Carthago is under siege! You've been attacked. Please check <#{channel.id}> to coordinate with your peers. Thank you!")
+                        except: 
+                            await ctx.send(f'Could not DM {user.name} because they have disabled DMs with bots, please message them manually.')
+                    
                     war_embed.add_field(name="__Reminder__", value="1.) Make sure you have enough resources including food and uranium, ping gov if you need more\
                             \n 2.) Look over their military before going in and plan out the best move\
                             \n 3.) Talk and coordinate with fellow members, declare at the same time and help each other\
                             \n Good luck!", inline=False)
-
                     await channel.send(f'{ping(ping_list)}{ping(def_ping_list)}',embed = war_embed)
 
                     #Gets the permissions for the members set up and pings them
@@ -229,8 +240,6 @@ async def create_chan(ctx, nation_link, reason = None, *members: discord.Member)
             #Checks to make sure it is a war reason and not a member
             if re.match(r'<@!\d{18}\>', reason):
                 id = int(reason.split('!')[1].split('>')[0])
-                print(id)
-                print(client.get_user(int(reason.split('!')[1].split('>')[0])))
                 members += (client.get_user(id),)
                 reason = ''
             #For loop to set permissions for members
@@ -292,7 +301,6 @@ async def clear_expired(ctx):
                 nation_link = topic.split()[2]
                 #Goes through a nation's wars and see if they still have wars with Carthago
                 for war in get_war_info(nation_link):
-                    print(war)
                     if war['Aggressor Alliance'] == 'Carthago' or war['Defender Alliance'] == 'Carthago':
                         active_war = True
                         break
@@ -620,54 +628,6 @@ async def add(ctx, type, reason = None, *nations):
 
 
 
-@client.command()
-async def bulk_ops(ctx):
-    '''
-    Creates a list of channels based on csv target list
-    '''
-    category = discord.utils.get(ctx.guild.categories, name = '[CANNAE BUT COUNTER]')
-
-    #Sees if the user has permissions to manage channels in the category and access bot
-    if category.permissions_for(ctx.author).manage_channels:
-        
-        #for loop to get attachment
-        for attachment in ctx.message.attachments:
-            await attachment.save(f'csv/{attachment.filename}')
-            await ctx.send('Sending DMs for spy ops')
-            break
-        #If no attachment is found
-        else:
-            await ctx.send('No Attachment Found')
-
-        #Access attachment and creates channels with it
-        with open(f'csv/{attachment.filename}') as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter=',')
-            line = 0
-            update_dict()
-            #Goes through each row to create channels
-            for row in csv_reader:
-                #Makes sure this is not the heading and it isn't an invalid row before creating a channel
-                if line != 0 and row[1] != '':
-                    target_link = row[1]
-                    goal = row[2]
-                    ops = [row[3], row[4], row[5]]
-
-                    #Creates the channel and edits the topic
-
-                line += 1
-
-            await ctx.send('Channels are finished being create, good luck in the wars to come!')
-    #If they don't have permission, tell them
-    else:
-        await ctx.send('You do not have permissions to create war channels')
-
-
-
-
-
-
-
-
 async def coord_perms(members, channel, channel_name, ctx):
     ''' 
     Sets the permissions of the members by adding them to the coordination channel
@@ -683,7 +643,6 @@ async def coord_perms(members, channel, channel_name, ctx):
         #Only adds them if they're valid values
         if member != '#ERROR!' and member != '' and member != '#VALUE!':
             discord_name = member_list(member)
-            print(ctx.guild.get_member(discord_name))
             #Makes sure that it adds valid users
             if discord_name != '':
                 await channel.set_permissions(ctx.guild.get_member(discord_name), read_messages=True, send_messages=True)
@@ -832,7 +791,6 @@ async def war_info_error(ctx, error):
 async def graph_error(ctx, error):
     if isinstance(error, commands.CommandOnCooldown):
         await ctx.send(f'The command is on cooldown for you, please try again in {error.retry_after:.3g} seconds')
-
 
 
 
