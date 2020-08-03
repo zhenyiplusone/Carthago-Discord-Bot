@@ -128,7 +128,7 @@ async def bulk_create(ctx):
                     channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on {row[0]}')
                     
 
-                    war_embed = discord.Embed(title= f"⚔️ __Target: {channel_name.split('-')[0]}__", 
+                    war_embed = discord.Embed(title= f"⚔️ __Target: {' '.join(channel_name.split('-')[:-1])}__", 
                         description= f"Please declare war on {row[0]}", color=0xcb2400,
                         url = f'https://politicsandwar.com/nation/war/declare/id={row[0].split("=")[1]}')
 
@@ -253,7 +253,7 @@ async def create_chan(ctx, nation_link, reason = None, *members: discord.Member)
                 reason = reason.replace('-', ' ')
                 reason = f', war reason: {reason}'
 
-            war_embed = discord.Embed(title= f"⚔️ __Target: {channel_name.split('-')[0]}__", 
+            war_embed = discord.Embed(title= f"⚔️ __Target: {' '.join(channel_name.split('-')[:-1])}__", 
                 description= f"Please declare war on {nation_link}{reason}", color=0xcb2400,
                 url = f'https://politicsandwar.com/nation/war/declare/id={nation_link.split("=")[1]}')
 
@@ -668,7 +668,6 @@ async def add_to_chan(ctx, nations):
     :param nations: List of nations to be added
     :returns: Discord ID of list of people to ping
     ''' 
-    update_dict()
     members = []
     #For loop that goes through every nation in nations to find them
     for nation in nations:
