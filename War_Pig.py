@@ -84,6 +84,7 @@ async def on_ready():
     Lets user know bot is ready
     '''
     print('Ready to go')
+    await client.change_presence(status=discord.Status.do_not_disturb, activity=discord.Game("Destroying mad cash"))
 
 
 
@@ -94,6 +95,7 @@ async def bulk_create(ctx):
     Creates a list of channels based on csv target list
     '''
     category = discord.utils.get(ctx.guild.categories, name = '[CANNAE BUT COUNTER]')
+    back_up_category = discord.utils.get(ctx.guild.categories, name = '[CANNAE BUT COUNTER 2]')
 
     #Sees if the user has permissions to manage channels in the category and access bot
     if category.permissions_for(ctx.author).manage_channels:
@@ -125,8 +127,12 @@ async def bulk_create(ctx):
                     channel_name = target_name.replace(' ', '-') + '-' + target_id
 
                     #Creates the channel and edits the topic
-                    channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on {row[0]}')
+                    channel = None
                     
+                    try: 
+                        channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on {row[0]}')
+                    except discord.HTTPException:
+                        channel = await ctx.guild.create_text_channel(channel_name, category = back_up_category, topic = f'War on {row[0]}')
 
                     war_embed = discord.Embed(title= f"⚔️ __Target: {' '.join(channel_name.split('-')[:-1])}__", 
                         description= f"Please declare war on {row[0]}", color=0xcb2400,
@@ -226,6 +232,7 @@ async def create_chan(ctx, nation_link, reason = None, *members: discord.Member)
     :param *members: Discord members to add to the channel
     '''
     category = discord.utils.get(ctx.guild.categories, name = '[CANNAE BUT COUNTER]')
+    back_up_category = discord.utils.get(ctx.guild.categories, name = '[CANNAE BUT COUNTER 2]')
 
     #Checks if they have the permission to create these channels
     if category.permissions_for(ctx.author).manage_channels:
@@ -234,7 +241,12 @@ async def create_chan(ctx, nation_link, reason = None, *members: discord.Member)
         if(re.search(r'politicsandwar.com/nation/id=\d{1,7}', nation_link)):
             channel_name = get_pnw_name(nation_link).replace(' ', '-') + '-' + nation_link.split('=')[1]
 
-            channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on {nation_link}')
+            channel = None
+            try:
+                channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on {nation_link}')
+            except discord.HTTPException:
+                channel = await ctx.guild.create_text_channel(channel_name, category = back_up_category, topic = f'War on {nation_link}')
+
             update_dict()
 
             #Checks to make sure it is a war reason and not a member
@@ -668,6 +680,7 @@ async def add_to_chan(ctx, nations):
     :param nations: List of nations to be added
     :returns: Discord ID of list of people to ping
     ''' 
+    update_dict()
     members = []
     #For loop that goes through every nation in nations to find them
     for nation in nations:
