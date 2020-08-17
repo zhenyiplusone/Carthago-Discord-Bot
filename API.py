@@ -126,5 +126,8 @@ def ID_info(id):
     api_key = '69e9cc72114cd2'
     return requests.get(f'https://politicsandwar.com/api/nation/id={id}&key={api_key}').json()
 
+def alliance_nation_info(id):
+    api_key = '69e9cc72114cd2'
+    return requests.get(f'https://politicsandwar.com/api/nation/id={id}&key={api_key}').json()
 if __name__ == '__main__':
     print(get_pnw_info('https://politicsandwar.com/nation/id=48730'))
