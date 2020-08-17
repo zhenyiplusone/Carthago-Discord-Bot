@@ -882,7 +882,7 @@ async def find_counters(ctx, target, ground_max_percent = math.inf, ground_min_p
         for row in rows[1:]:
             cells = row.find_all('td')
             score = float(cells[6].text.replace(' ', '').replace(',', ''))
-            if(target_info['score'] * 0.75 <= score <= target_info['score'] * 1.75 ):
+            if(target_info['score'] * (1/1.75) <= score <= target_info['score'] * (1/0.75) ):
                 alliance_nations_in_range[cells[1].find('a')['href'].split('=')[1]] = [cells[1].find('a').text, int(cells[5].text), score]
 
     counter_embed = discord.Embed(title= f"🎯 __Potential Counter for {target_info['leadername']}:__", 
