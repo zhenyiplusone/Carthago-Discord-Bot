@@ -449,6 +449,7 @@ async def war_info(ctx):
 
 @client.command()
 @commands.cooldown(1, 30, commands.BucketType.user)
+@commands.has_role(567389586934726677)
 async def graph(ctx, type, *alliances): 
     '''
     Graphs specific information for alliances
@@ -643,6 +644,7 @@ async def add(ctx, type, reason = None, *nations):
 
 
 @client.command()
+@commands.has_role(567389586934726677)
 async def find_targets(ctx, member, target_alliance, ground_max_percent = 120, ground_min_percent = 40, air_max_percent = 120, air_min_percent = 40): 
     ''' 
     Finds targets to attack in an enemy alliance for member
@@ -827,6 +829,7 @@ async def find_targets(ctx, member, target_alliance, ground_max_percent = 120, g
 
 
 @client.command()
+@commands.has_role(567389586934726677)
 async def find_counters(ctx, target, ground_max_percent = math.inf, ground_min_percent = 80, air_max_percent = math.inf, air_min_percent = 80): 
     ''' 
     Finds counters for an enemy
