@@ -39,6 +39,7 @@ from API import ID_info
 from openpyxl import load_workbook
 
 client = commands.Bot(command_prefix = '!')
+client.remove_command('help')
 
 
 gaccount = gspread.service_account(filename = 'war pig-9478580af5de.json')
@@ -686,7 +687,7 @@ async def find_targets(ctx, member, target_alliance, ground_max_percent = 120, g
         await ctx.send('The member is not a valid nation ID or link')
         return
 
-    res = requests.get(f'https://politicsandwar.com/index.php?id=15&keyword={target_alliance}&cat=alliance&ob=score&od=DESC&maximum=15&minimum=0&search=Go&memberview=true')
+    res = requests.get(f'https://politicsandwar.com/index.php?id=15&keyword={target_alliance}&cat=alliance&ob=score&od=DESC&maximum=15&minimum=0&search=Go&memberview=true&beige=true')
     soup_data = BeautifulSoup(res.text, 'html.parser')
     data = soup_data.find(text = re.compile('Showing'))
     num_nations = float(data.split()[3])
@@ -700,7 +701,7 @@ async def find_targets(ctx, member, target_alliance, ground_max_percent = 120, g
     #Grabs data for every nation in the alliance
     alliance_nations_in_range = {}
     for nations in range(0, math.ceil(num_nations/50)):
-        res = requests.get(f'https://politicsandwar.com/index.php?id=15&keyword={target_alliance}&cat=alliance&ob=score&od=DESC&maximum={50*(nations+1)}&minimum={50*nations}&search=Go&memberview=true')
+        res = requests.get(f'https://politicsandwar.com/index.php?id=15&keyword={target_alliance}&cat=alliance&ob=score&od=DESC&maximum={50*(nations+1)}&minimum={50*nations}&search=Go&memberview=true&beige=true')
         soup_data = BeautifulSoup(res.text, 'html.parser')
         data = soup_data.find_all("td", attrs={"class": "right"}, text = re.compile(r'^[1-9]\d*$'))
 
@@ -709,9 +710,12 @@ async def find_targets(ctx, member, target_alliance, ground_max_percent = 120, g
         for row in rows[1:]:
             cells = row.find_all('td')
             score = float(cells[6].text.replace(' ', '').replace(',', ''))
-            if(member_info['score'] * 0.75 <= score <= member_info['score'] * 1.75 ):
-                alliance_nations_in_range[cells[1].find('a')['href'].split('=')[1]] = [cells[1].find('a').text, int(cells[5].text), score]
-
+            try:
+                slots = int(cells[6].find('img')['title'].split(' ')[0])
+                if(member_info['score'] * 0.75 <= score <= member_info['score'] * 1.75 ):
+                    alliance_nations_in_range[cells[1].find('a')['href'].split('=')[1]] = [cells[1].find('a').text, int(cells[5].text), score]
+            except:
+                pass
     target_embed = discord.Embed(title= f"🎯 __Potential Targets for {member_info['leadername']}__", 
         description = f'{member_info["leadername"]} has {member_info["soldiers"]} soldiers, {member_info["tanks"]} tanks, {member_info["aircraft"]} planes, and {member_info["ships"]} ships.')
     potential_targets = OrderedDict()
@@ -846,6 +850,7 @@ async def find_counters(ctx, target, ground_max_percent = math.inf, ground_min_p
             raw_target_info = ID_info(target.split('=')[1])
             target_info['leadername'] = raw_target_info['leadername']
             target_info['score'] = float(raw_target_info['score'])
+            target_info['slots'] = f'{raw_target_info["defensivewars"]}/3 slots'
             for key in ['soldiers', 'tanks', 'aircraft', 'ships']:
                 target_info[key] = int(raw_target_info[key])
         except:
@@ -857,6 +862,7 @@ async def find_counters(ctx, target, ground_max_percent = math.inf, ground_min_p
             raw_target_info = ID_info(target)
             target_info['leadername'] = raw_target_info['leadername']
             target_info['score'] = float(raw_target_info['score'])
+            target_info['slots'] = f'{raw_target_info["defensivewars"]}/3 slots'
             for key in ['soldiers', 'tanks', 'aircraft', 'ships']:
                 target_info[key] = int(raw_target_info[key])
         except:
@@ -888,7 +894,7 @@ async def find_counters(ctx, target, ground_max_percent = math.inf, ground_min_p
             if(target_info['score'] * (1/1.75) <= score <= target_info['score'] * (1/0.75) ):
                 alliance_nations_in_range[cells[1].find('a')['href'].split('=')[1]] = [cells[1].find('a').text, int(cells[5].text), score]
 
-    counter_embed = discord.Embed(title= f"🎯 __Potential Counter for {target_info['leadername']}:__", 
+    counter_embed = discord.Embed(title= f"🎯 __Potential Counter for {target_info['leadername']} ({target_info['slots']}):__", 
         description = f'{target_info["leadername"]} has {target_info["soldiers"]} soldiers, {target_info["tanks"]} tanks, {target_info["aircraft"]} planes, and {target_info["ships"]} ships.')
    
     potential_counters = OrderedDict()
@@ -1046,6 +1052,44 @@ async def add_to_chan(ctx, nations):
             await ctx.send(f"Couldn't find member {nation}, either the member sheet is not updated or it is not a nation link/nation ID.")
     return members
 
+@client.command()
+@commands.has_role(567389586934726677)
+async def help(ctx):
+    help_embed = discord.Embed(title= f"📖 __List of Commands__", color=0xcb2400)
+    help_embed.add_field(name = '!find_targets', value = f'Finds a list of targets in an alliance within range and military capabilities.\n Parameters\
+        are <member nation id or link> <target alliance> <ground max %> <ground min %> <air max %> <air min %> (default is 120% max and 40% min, not neccessary to fill in)\
+        \n__Example__: !find_targets 48730 The+Knights+Radiant 150 90 170 80 finds all TKR nations in range with 150-90% of my ground and 170-80% of my planes', inline = False)
+
+    help_embed.add_field(name = '!find_counters', value = f'Finds a list of targets in Carthago within range and military capabilities to counter.\n Parameters\
+        are <target nation id or link> <ground max %> <ground min %> <air max %> <air min %> (default is infinity% max and 80% min, not neccessary to fill in)\
+        \n__Example__: !find_counters 48730 150 90 170 80 finds all Carthago nations in range with 150-90% of my ground and 170-80% of my planes', inline = False)
+   
+    #Check if user has manage war chan perms aka are they milcom
+    category = discord.utils.get(ctx.guild.categories, name = '[CANNAE BUT COUNTER]')
+    if category.permissions_for(ctx.author).manage_channels:
+        help_embed.add_field(name = '\u200b', value = '\u200b', inline = False)
+        help_embed.add_field(name = '**__Milcom Specific Commands:__**', value = '\u200b', inline = False)
+        help_embed.add_field(name = '!create_chan', value = f'Creates a channel for war.\n Parameters\
+            are <target nation id or link> <@member1> <@member2> etc\
+            \n__Example__: !create_chan 48730 @Daveth#0674 @Kraмpus#0001 creates a channel telling them to declare on Piglantia', inline = False)
+
+        help_embed.add_field(name = '!bulk_create', value = f'Uses a CSV sheet to create a list of coordination channels.\n Parameter\
+            is a CSV sheet using this format https://docs.google.com/spreadsheets/d/1Fo-wEUWkslONQE5tyIkLQ6Ubc3paPUMurx1SgQz8OFo/edit?usp=sharing', inline = False)
+
+        help_embed.add_field(name = '!add', value = f'Adds attacker or defender to channel.\n Parameters are\
+           <atk or def> <member id/link> \n Example: !add atk 48730 adds Piglantia to channel as attacker', inline = False)
+
+        help_embed.add_field(name = '!war_info', value = f'Use in war channel to get excel sheet of MAPs and resistance of all wars target is in.', inline = False)
+
+        help_embed.add_field(name = '!clear_expired', value = f'Deletes all war channels which no longer have active Carthago wars', inline = False)
+
+        help_embed.add_field(name = '!graph', value = f'Creates graphs of the alliances\n Parameters\
+            are <scat or histk> <alliance 1> <alliance 2> (use + to seperate spaces)\
+            \n__Example__: !graph scat Carthago House+Stark creates a scatter graph of military kills and highlights outliers to be used as prio targets\n\
+            !graph hist Carthago returns histogram of city count of Carthago', inline = False)
+
+
+    await ctx.send(embed = help_embed)
 '''
 @client.command()
 async def find_members(ctx):
