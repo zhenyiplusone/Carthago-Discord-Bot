@@ -614,7 +614,7 @@ async def add(ctx, type, reason = None, *nations):
     :param reason: The (optional) reason for war, you can leave this blank. Dashes "-" in place of spaces for reason.
     :param nations: Nation link or ID of list of members to add
     ''' 
-    reason = reason.replace('-', ' ')
+    reason = reason.replace('+', ' ')
     reason = f'The war reason is: {reason}'
     #Clears the war reason if it doesn't exist and in place is a nation link/ID
     if re.search(r'\d{1,7}', reason):
