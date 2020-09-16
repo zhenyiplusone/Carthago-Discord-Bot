@@ -1070,8 +1070,8 @@ async def help(ctx):
         help_embed.add_field(name = '\u200b', value = '\u200b', inline = False)
         help_embed.add_field(name = '**__Milcom Specific Commands:__**', value = '\u200b', inline = False)
         help_embed.add_field(name = '!create_chan', value = f'Creates a channel for war.\n Parameters\
-            are <target nation id or link> <@member1> <@member2> etc\
-            \n__Example__: !create_chan 48730 @Daveth#0674 @Kraмpus#0001 creates a channel telling them to declare on Piglantia', inline = False)
+            are <target nation id or link> <Optional Counter Reason> <@member1> <@member2> etc\
+            \n__Example__: !create_chan 48730 counter+for+nexus @Daveth#0674 @Kraмpus#0001 creates a channel telling them to declare on Piglantia with reason of "counter for nexus"', inline = False)
 
         help_embed.add_field(name = '!bulk_create', value = f'Uses a CSV sheet to create a list of coordination channels.\n Parameter\
             is a CSV sheet using this format https://docs.google.com/spreadsheets/d/1Fo-wEUWkslONQE5tyIkLQ6Ubc3paPUMurx1SgQz8OFo/edit?usp=sharing', inline = False)
