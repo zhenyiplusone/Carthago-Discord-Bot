@@ -232,7 +232,7 @@ async def create_chan(ctx, nation_link, reason = None, *members: discord.Member)
     Creates a channel using nation link and the list of members to add to it
 
     :param nation_link: PnW link of nation that is the target
-    :param reason: Reason (optional) for the war, you can leave it blank. Dashes "-" in place of spaces for reason.
+    :param reason: Reason (optional) for the war, you can leave it blank. "+" in place of spaces for reason.
     :param *members: Discord members to add to the channel
     '''
     category = discord.utils.get(ctx.guild.categories, name = '[CANNAE BUT COUNTER]')
@@ -264,9 +264,9 @@ async def create_chan(ctx, nation_link, reason = None, *members: discord.Member)
                 await channel.set_permissions(member, read_messages=True, send_messages=True)
                 ping = ping + f'<@{member.id}> '
             
-            #If it is a valid war reason, replace dashes with spaces
+            #If it is a valid war reason, replace + with spaces
             if reason != '':
-                reason = reason.replace('-', ' ')
+                reason = reason.replace('+', ' ')
                 reason = f', war reason: {reason}'
 
             war_embed = discord.Embed(title= f"⚔️ __Target: {' '.join(channel_name.split('-')[:-1])}__", 
