@@ -990,7 +990,23 @@ async def find_counters(ctx, target, ground_max_percent = math.inf, ground_min_p
 
     await find_counters_msg.clear_reactions()
 
+@client.command()
+async def piggy(ctx): 
+    await ctx.send("Did you just assume <@236978935538122754>'s gender? Ew.")
 
+@client.command()
+async def active_wars(ctx): 
+    war_json = requests.get(f'https://politicsandwar.com/api/wars/500&alliance_id=5049&key=69e9cc72114cd2').json()
+    wars = war_json['wars']
+    active_war_embed= discord.Embed(title= f"📓 Active Wars", 
+        description = f'This is a list of active Carthago wars')
+    for war in wars:
+        if(war["status"] == "Active" or war["status"] == 'Defender Offered Peace' or war["status"] == 'Attacker Offered Peace'):
+            name_atk = ID_info(f"{war['attackerID']}")['name']
+            name_def = ID_info(f"{war['defenderID']}")['name']
+            active_war_embed.add_field(name = war['warID'], value = f'{name_atk} vs {name_def}')
+
+    await ctx.send(embed = active_war_embed)
 
 async def coord_perms(members, channel, channel_name, ctx):
     ''' 
