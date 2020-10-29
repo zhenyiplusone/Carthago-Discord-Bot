@@ -154,7 +154,8 @@ async def bulk_create(ctx):
                         user = client.get_user(member)
                         war_embed.add_field(name= f"__Attacker {index + 1}:__", value=f"[{user.display_name}]({link})", inline=True)
                         try:
-                            await user.send(content = f"It's time to send in the elephants! Please check <#{channel.id}> for your war assignment. Thank You!")
+                            await user.send(content = f"It's time to send in the elephants! Please check <#{channel.id}> for your war assignment. Thank You!\n\
+                                Unless you have way more ground, use air to air attacks.")
                         except: 
                             await ctx.send(f'Could not DM {user.name} because they have disabled DMs with bots, please message them manually.')
                     def_ping_list = await coord_perms(defenders, channel, channel_name, ctx)
