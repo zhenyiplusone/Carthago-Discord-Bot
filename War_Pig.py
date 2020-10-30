@@ -38,7 +38,9 @@ from API import req_info
 from API import ID_info
 from openpyxl import load_workbook
 
-client = commands.Bot(command_prefix = '!')
+intents = discord.Intents.default()
+intents.members = True
+client = commands.Bot(command_prefix = '!', intents=intents)
 client.remove_command('help')
 
 
@@ -996,6 +998,10 @@ async def piggy(ctx):
     await ctx.send("Did you just assume <@236978935538122754>'s gender? Ew.")
 
 @client.command()
+async def test(ctx): 
+    print(ctx.guild.get_member(236978935538122754))
+
+@client.command()
 async def active_wars(ctx): 
     war_json = requests.get(f'https://politicsandwar.com/api/wars/500&alliance_id=5049&key=69e9cc72114cd2').json()
     wars = war_json['wars']
@@ -1023,7 +1029,9 @@ async def coord_perms(members, channel, channel_name, ctx):
     for member in members:
         #Only adds them if they're valid values
         if member != '#ERROR!' and member != '' and member != '#VALUE!':
+            print(member)
             discord_name = member_list(member)
+            print(ctx.guild.get_member(discord_name))
             #Makes sure that it adds valid users
             if discord_name != '':
                 await channel.set_permissions(ctx.guild.get_member(discord_name), read_messages=True, send_messages=True)
