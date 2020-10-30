@@ -1,5 +1,5 @@
-discord 1.5.1
-discord.py 1.5.1
+discord
+discord.py
 requests
 openpyxl
 numpy
