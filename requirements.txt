@@ -1,5 +1,5 @@
-discord
-discord.py
+discord==1.5.1
+discord.py==1.5.1
 requests
 openpyxl
 numpy
