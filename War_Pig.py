@@ -272,7 +272,7 @@ async def create_chan(ctx, nation_link, reason = None, *members: discord.Member)
                 reason = f', war reason: {reason}'
 
             war_embed = discord.Embed(title= f"⚔️ __Target: {' '.join(channel_name.split('-')[:-1])}__", 
-                description= f"Please declare war on {nation_link}{reason}", color=0xcb2400,
+                description= f"Please declare ATTRITION war on {nation_link}{reason}", color=0xcb2400,
                 url = f'https://politicsandwar.com/nation/war/declare/id={nation_link.split("=")[1]}')
 
 
@@ -997,8 +997,10 @@ async def piggy(ctx):
     await ctx.send("Did you just assume <@236978935538122754>'s gender? Ew.")
 
 @client.command()
-async def test(ctx): 
-    print(ctx.guild.get_member(236978935538122754))
+async def mil_info(ctx): 
+    nation_link = ctx.channel.topic.split()[2]
+    nation_info = req_info(nation_link)
+    await ctx.send(f"{nation_info['name']} has {nation_info['soldiers']} soldiers, {nation_info['tanks']} tanks, {nation_info['aircraft']} planes, and {nation_info['ships']} ships.")
 
 @client.command()
 async def active_wars(ctx): 
@@ -1137,7 +1139,6 @@ def member_list(leader_name):
 
     :returns: The Discord ID of the member
     '''
-    print(member_dict)
     return member_dict.get(leader_name, '')
 
 

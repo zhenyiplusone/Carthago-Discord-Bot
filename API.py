@@ -56,6 +56,7 @@ def get_pnw_mil(link):
     :returns: the amount of military in a dictionary
     '''
     req = req_info(link)
+    print(link)
     mil_count = {"Soldiers": req['soldiers'], "Tanks":req['tanks'],\
     "Planes":req['aircraft'], "Ships": req['ships']}
     return mil_count
