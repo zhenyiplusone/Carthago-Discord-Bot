@@ -339,7 +339,7 @@ async def clear_expired(ctx):
 
 @client.command()
 @commands.cooldown(1, 60, commands.BucketType.channel)
-async def war_info(ctx):
+async def war_info_full(ctx):
     '''
     Gets the all war information about the target nation
 
@@ -1116,6 +1116,43 @@ async def help(ctx):
 
 
     await ctx.send(embed = help_embed)
+
+
+@client.command()
+@commands.cooldown(1, 30, commands.BucketType.channel)
+async def war_info(ctx):
+    try:
+        nation_link = ctx.channel.topic.split()[2]
+        target_id = nation_link.split('=')[1]
+        nation_info = req_info(nation_link)
+        war_info_embed = discord.Embed(title= f"{nation_info['name']} ({nation_info['cities']}) [{nation_info['alliance']}] ", color=0x6AA84F)
+        war_info_embed.add_field(name = 'War Info', value = f"The target has {nation_info['soldiers']} soldiers, {nation_info['tanks']} tanks, {nation_info['aircraft']} aircraft, and {nation_info['ships']} ships", inline = False)
+
+
+        await ctx.send(embed = war_info_embed)
+
+        #Fils in offensive war unique attributes
+        off_embed = discord.Embed(title= f"Offensive Wars", color=0xcb2400)
+        def_embed = discord.Embed(title= f"Defensive Wars", color=0x06FFFF)
+        off_wars = get_all_war_info(nation_link, True)
+        for war in off_wars:
+            req = req_info(f"https://politicsandwar.com/nation/id={war['defender_id']}")
+            off_embed.add_field(name = f"{req['leadername']} ({req['cities']}) [{war['defender_alliance_name']}] https://politicsandwar.com/nation/id={war['defender_id']}", 
+            value = f"{nation_info['name']} MAP: {war['aggressor_military_action_points']} | Resis: {war['aggressor_resistance']}\n{req['leadername']} MAP: {war['defender_military_action_points']} | Resis: {war['defender_resistance']}\n{nation_info['soldiers']} soldiers | {nation_info['tanks']} tanks | {nation_info['aircraft']} aircraft | {nation_info['ships']} ship", inline = False)
+
+        #Fills in defensive war unique attributes
+        def_wars = get_all_war_info(nation_link, False)
+        for war in def_wars:
+            req = req_info(f"https://politicsandwar.com/nation/id={war['aggressor_id']}")
+            def_embed.add_field(name = f"{req['leadername']} ({req['cities']}) [{war['aggressor_alliance_name']}] https://politicsandwar.com/nation/id={war['defender_id']}", 
+            value = f"{req['leadername']} {war['aggressor_military_action_points']} | Resis: {war['aggressor_resistance']}\n{nation_info['name']} MAP: {war['defender_military_action_points']} | Resis: {war['defender_resistance']}\n{nation_info['soldiers']} soldiers | {nation_info['tanks']} tanks | {nation_info['aircraft']} aircraft | {nation_info['ships']} ship", inline = False)
+
+        await ctx.send(embed = off_embed)
+        await ctx.send(embed = def_embed)
+
+    except:
+        await ctx.send("Something went wrong :( likely with the channel set up. Go grab Piggu.")
+
 '''
 @client.command()
 async def find_members(ctx):
