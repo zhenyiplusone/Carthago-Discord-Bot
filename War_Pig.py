@@ -1137,15 +1137,17 @@ async def war_info(ctx):
         off_wars = get_all_war_info(nation_link, True)
         for war in off_wars:
             req = req_info(f"https://politicsandwar.com/nation/id={war['defender_id']}")
+            def_info = ID_info(war['defender_id'])
             off_embed.add_field(name = f"{req['leadername']} ({req['cities']}) [{war['defender_alliance_name']}] https://politicsandwar.com/nation/id={war['defender_id']}", 
-            value = f"{nation_info['name']} MAP: {war['aggressor_military_action_points']} | Resis: {war['aggressor_resistance']}\n{req['leadername']} MAP: {war['defender_military_action_points']} | Resis: {war['defender_resistance']}\n{nation_info['soldiers']} soldiers | {nation_info['tanks']} tanks | {nation_info['aircraft']} aircraft | {nation_info['ships']} ship", inline = False)
+            value = f"{nation_info['name']} MAP: {war['aggressor_military_action_points']} | Resis: {war['aggressor_resistance']}\n{req['leadername']} MAP: {war['defender_military_action_points']} | Resis: {war['defender_resistance']}\n{def_info['soldiers']} soldiers | {def_info['tanks']} tanks | {def_info['aircraft']} aircraft | {def_info['ships']} ship", inline = False)
 
         #Fills in defensive war unique attributes
         def_wars = get_all_war_info(nation_link, False)
         for war in def_wars:
             req = req_info(f"https://politicsandwar.com/nation/id={war['aggressor_id']}")
+            agg_info = ID_info(war['aggressor_id'])
             def_embed.add_field(name = f"{req['leadername']} ({req['cities']}) [{war['aggressor_alliance_name']}] https://politicsandwar.com/nation/id={war['defender_id']}", 
-            value = f"{req['leadername']} {war['aggressor_military_action_points']} | Resis: {war['aggressor_resistance']}\n{nation_info['name']} MAP: {war['defender_military_action_points']} | Resis: {war['defender_resistance']}\n{nation_info['soldiers']} soldiers | {nation_info['tanks']} tanks | {nation_info['aircraft']} aircraft | {nation_info['ships']} ship", inline = False)
+            value = f"{req['leadername']} {war['aggressor_military_action_points']} | Resis: {war['aggressor_resistance']}\n{nation_info['name']} MAP: {war['defender_military_action_points']} | Resis: {war['defender_resistance']}\n{agg_info['soldiers']} soldiers | {agg_info['tanks']} tanks | {agg_info['aircraft']} aircraft | {agg_info['ships']} ship", inline = False)
 
         await ctx.send(embed = off_embed)
         await ctx.send(embed = def_embed)
