@@ -1147,7 +1147,7 @@ async def war_info(ctx):
             req = req_info(f"https://politicsandwar.com/nation/id={war['aggressor_id']}")
             agg_info = ID_info(war['aggressor_id'])
             def_embed.add_field(name = f"{req['leadername']} ({req['cities']}) [{war['aggressor_alliance_name']}] https://politicsandwar.com/nation/id={war['defender_id']}", 
-            value = f"{req['leadername']} {war['aggressor_military_action_points']} | Resis: {war['aggressor_resistance']}\n{nation_info['name']} MAP: {war['defender_military_action_points']} | Resis: {war['defender_resistance']}\n{agg_info['soldiers']} soldiers | {agg_info['tanks']} tanks | {agg_info['aircraft']} aircraft | {agg_info['ships']} ship", inline = False)
+            value = f"{req['leadername']} MAP: {war['aggressor_military_action_points']} | Resis: {war['aggressor_resistance']}\n{nation_info['name']} MAP: {war['defender_military_action_points']} | Resis: {war['defender_resistance']}\n{agg_info['soldiers']} soldiers | {agg_info['tanks']} tanks | {agg_info['aircraft']} aircraft | {agg_info['ships']} ship", inline = False)
 
         await ctx.send(embed = off_embed)
         await ctx.send(embed = def_embed)
