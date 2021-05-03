@@ -57,8 +57,17 @@ nation_id = list(map(int, nation_id))
 dis_id = list(map(int, dis_id))
 member_dict = dict(zip(member_names, dis_id))
 nation_dict = dict(zip(dis_id, nation_id))  
-rev_nation_dict = dict(zip(nation_id, dis_id))   
+rev_nation_dict = dict(zip(nation_id, dis_id))
 
+'''
+wargsheet = gaccount.open("Carthago MilCom").worksheet("Spheres")
+sphere_names = wargsheet.row_values(1)
+alliances_in_spheres = []
+for x in range(1,len(sphere_names)):
+    alliances_in_spheres.append(wargsheet.col_values(x)[1:])
+
+spheres_to_member_alliances = dict(zip(sphere_names, alliances_in_spheres))
+print(spheres_to_member_alliances)'''
 
 '''member_names = ['Azrael','New Suleiman','Daveth','Locinii','Lothair of Acre','GrandmasterBee','Bmber',
 'Aaron Comneno','Asierith','Auto Von Bismarck','Ragnarok8085','Tamasith','Velium','Thibaud Brent',
@@ -141,7 +150,7 @@ async def bulk_create(ctx):
                         channel = await ctx.guild.create_text_channel(channel_name, category = back_up_category, topic = f'War on {row[0]}')
 
                     war_embed = discord.Embed(title= f"⚔️ __Target: {' '.join(channel_name.split('-')[:-1])}__", 
-                        description= f"Please declare war on {row[0]}", color=0xcb2400,
+                        description= f"Please declare ORDINARY war on {row[0]}", color=0xcb2400,
                         url = f'https://politicsandwar.com/nation/war/declare/id={row[0].split("=")[1]}')
 
 
@@ -156,7 +165,7 @@ async def bulk_create(ctx):
                         user = client.get_user(member)
                         war_embed.add_field(name= f"__Attacker {index + 1}:__", value=f"[{user.display_name}]({link})", inline=True)
                         try:
-                            await user.send(content = f"It's time to send in the elephants! Please check <#{channel.id}> for your war assignment. Thank You!")
+                            await user.send(content = f"It's time to send in the elephants! Please check <#{channel.id}> for your **war assignment**. Thank You! P.S. Start with a **dogfight against their aircraft**, then **assassinate their spies** and post results in <#639621955795812362> :)")
                         except: 
                             await ctx.send(f'Could not DM {user.name} because they have disabled DMs with bots, please message them manually.')
                     def_ping_list = await coord_perms(defenders, channel, channel_name, ctx)
@@ -174,6 +183,7 @@ async def bulk_create(ctx):
                     war_embed.add_field(name="__Reminder__", value="1.) Make sure you have enough resources including food and uranium, ping gov if you need more\
                             \n 2.) Look over their military before going in and plan out the best move\
                             \n 3.) Talk and coordinate with fellow members, declare at the same time and help each other\
+                            \n 4.) Again, start with a dogfight against their aircraft, then assassinate their spies and post results in <#639621955795812362>\
                             \n Good luck!", inline=False)
                     await channel.send(f'{ping(ping_list)}{ping(def_ping_list)}',embed = war_embed)
 
@@ -1154,6 +1164,72 @@ async def war_info(ctx):
 
     except:
         await ctx.send("Something went wrong :( likely with the channel set up. Go grab Piggu.")
+
+'''
+@client.command()
+async def table(ctx, type, *aaorsphere): 
+    message = await ctx.send('Gathering information... please wait a few moments')
+    book = load_workbook('spreadsheet/CooperPooper.xlsx')
+    sheet = book.active #active means last opened sheet
+    try:
+        for row in sheet['B1:K16']:
+          for cell in row:
+            cell.value = None
+
+        if(type == 'alliances'):
+            label = []
+
+            #Makes it in the right format to be entered in url
+            for name in alliances:
+                label.append(name.replace('+', ' ').title())
+
+            #Runs through alliances and sees the number of nations
+            for i, ally in enumerated(alliances):
+                await message.edit(content = f'Gathering information from {ally.replace("+", " ").title()}')
+                print(ally)
+                res = requests.get(f'https://politicsandwar.com/index.php?id=15&keyword={ally}&cat=alliance&ob=score&od=DESC&maximum=15&minimum=0&search=Go&memberview=true')
+                soup_data = BeautifulSoup(res.text, 'html.parser')
+                data = soup_data.find(text = re.compile('Showing'))
+                num_nations = float(data.split()[3])
+                
+                #Error handling for if the number of nations for the alliance is 0
+                if num_nations == 0:
+                    await ctx.send(f'Could not find any nations in the alliance {ally.replace("+", " ").title()}, make sure it is spelled correctly')
+                    label.remove(ally)
+                    continue
+                alliance_city_data = {'1-8': 0, 
+                                    '8-10': 0,
+                                    '10-12': 0,
+                                    '13-14': 0,
+                                    '15-16': 0,
+                                    '17-18': 0,
+                                    '19-20': 0,
+                                    '21-23': 0,
+                                    '24-26': 0,
+                                    '27-30': 0,
+                                    '31-34': 0,
+                                    '35-60':0}
+
+                #Grabs data for every nation in the alliance
+                for nations in range(0, math.ceil(num_nations/50)):
+                    res = requests.get(f'https://politicsandwar.com/index.php?id=15&keyword={ally}&cat=alliance&ob=score&od=DESC&maximum={50*(nations+1)}&minimum={50*nations}&search=Go&memberview=true')
+                    soup_data = BeautifulSoup(res.text, 'html.parser')
+                    data = soup_data.find_all("td", attrs={"class": "right"}, text = re.compile(r'^[1-9]\d*$'))
+
+                    for city in data:
+                        for key in alliance_city_data:
+                            cityRange = list(map(int, key.split('-')))
+                            if int(city.contents[0]) in range(key.split('-')[0],key.split('-')[0]+1):
+                                alliance_city_data[key]+=1
+                                break
+            
+  
+
+        if(type == 'spheres'):
+            pass
+    except:
+        await ctx.send('hi')
+'''
 
 '''
 @client.command()
