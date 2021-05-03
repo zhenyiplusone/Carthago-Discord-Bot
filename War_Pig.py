@@ -150,7 +150,7 @@ async def bulk_create(ctx):
                         channel = await ctx.guild.create_text_channel(channel_name, category = back_up_category, topic = f'War on {row[0]}')
 
                     war_embed = discord.Embed(title= f"⚔️ __Target: {' '.join(channel_name.split('-')[:-1])}__", 
-                        description= f"Please declare ORDINARY war on {row[0]}", color=0xcb2400,
+                        description= f"Please declare ATTRITION war on {row[0]}", color=0xcb2400,
                         url = f'https://politicsandwar.com/nation/war/declare/id={row[0].split("=")[1]}')
 
 
@@ -282,7 +282,7 @@ async def create_chan(ctx, nation_link, reason = None, *members: discord.Member)
                 reason = f', war reason: {reason}'
 
             war_embed = discord.Embed(title= f"⚔️ __Target: {' '.join(channel_name.split('-')[:-1])}__", 
-                description= f"Please declare ORDINARY war on on {nation_link}{reason}", color=0xcb2400,
+                description= f"Please declare ATTRITION war on on {nation_link}{reason}", color=0xcb2400,
                 url = f'https://politicsandwar.com/nation/war/declare/id={nation_link.split("=")[1]}')
 
 
