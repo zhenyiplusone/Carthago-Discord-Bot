@@ -282,7 +282,7 @@ async def create_chan(ctx, nation_link, reason = None, *members: discord.Member)
                 reason = f', war reason: {reason}'
 
             war_embed = discord.Embed(title= f"⚔️ __Target: {' '.join(channel_name.split('-')[:-1])}__", 
-                description= f"Please declare war on {nation_link}{reason}", color=0xcb2400,
+                description= f"Please declare ORDINARY war on on {nation_link}{reason}", color=0xcb2400,
                 url = f'https://politicsandwar.com/nation/war/declare/id={nation_link.split("=")[1]}')
 
 
@@ -297,6 +297,7 @@ async def create_chan(ctx, nation_link, reason = None, *members: discord.Member)
             war_embed.add_field(name="__Reminder__", value="1.) Make sure you have enough resources including food and uranium, ping gov if you need more\
                     \n 2.) Look over their military before going in and plan out the best move\
                     \n 3.) Talk and coordinate with fellow members, declare at the same time and help each other\
+                    \n 4.) Again, start with a dogfight against their aircraft, then assassinate their spies and post results in <#639621955795812362>\
                     \n Good luck!", inline=False)
 
             await channel.send(f'{ping}',embed = war_embed)
