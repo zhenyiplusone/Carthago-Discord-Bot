@@ -37,6 +37,7 @@ from API import get_cities
 from API import req_info
 from API import ID_info
 from openpyxl import load_workbook
+from typing import Optional
 
 intents = discord.Intents.default()
 intents.members = True
@@ -237,9 +238,9 @@ async def run_test_sheet(ctx):
 """
 
 
-
+war_types = ["RAID", "ORDINARY", "ATTRITION"]
 @client.command()
-async def create_chan(ctx, nation_link, reason = None, *members: discord.Member):
+async def create_chan(ctx, nation_link, war_type: Optional[int] = 0, reason: Optional[str] = "Carthago Counter", *members: Optional[discord.Member]):
     ''' 
     Creates a channel using nation link and the list of members to add to it
 
@@ -266,6 +267,7 @@ async def create_chan(ctx, nation_link, reason = None, *members: discord.Member)
             update_dict()
 
             #Checks to make sure it is a war reason and not a member
+            
             if re.match(r'<@!\d{18}\>', reason):
                 id = int(reason.split('!')[1].split('>')[0])
                 members += (client.get_user(id),)
@@ -280,9 +282,9 @@ async def create_chan(ctx, nation_link, reason = None, *members: discord.Member)
             if reason != '':
                 reason = reason.replace('+', ' ')
                 reason = f', war reason: {reason}'
-
+  
             war_embed = discord.Embed(title= f"⚔️ __Target: {' '.join(channel_name.split('-')[:-1])}__", 
-                description= f"Please declare ATTRITION war on on {nation_link}{reason}", color=0xcb2400,
+                description= f"Please declare {war_types[war_type]} war on on {nation_link}{reason}", color=0xcb2400,
                 url = f'https://politicsandwar.com/nation/war/declare/id={nation_link.split("=")[1]}')
 
 
@@ -1107,8 +1109,8 @@ async def help(ctx):
         help_embed.add_field(name = '\u200b', value = '\u200b', inline = False)
         help_embed.add_field(name = '**__Milcom Specific Commands:__**', value = '\u200b', inline = False)
         help_embed.add_field(name = '!create_chan', value = f'Creates a channel for war.\n Parameters\
-            are <target nation id or link> <Optional Counter Reason> <@member1> <@member2> etc\
-            \n__Example__: !create_chan 48730 counter+for+nexus @Daveth#0674 @Kraмpus#0001 creates a channel telling them to declare on Piglantia with reason of "counter for nexus"', inline = False)
+            are <target nation id or link> <Optional War Type 0, 1, 2> <Optional Counter Reason> <@member1> <@member2> etc\
+            \n__Example__: !create_chan 48730 1 counter+for+nexus @Daveth#0674 @Kraмpus#0001 creates a channel telling them to declare ordinary war on Piglantia with reason of "counter for nexus"', inline = False)
 
         help_embed.add_field(name = '!bulk_create', value = f'Uses a CSV sheet to create a list of coordination channels.\n Parameter\
             is a CSV sheet using this format https://docs.google.com/spreadsheets/d/1Fo-wEUWkslONQE5tyIkLQ6Ubc3paPUMurx1SgQz8OFo/edit?usp=sharing', inline = False)
