@@ -660,7 +660,7 @@ async def add(ctx, type, reason = None, *nations):
 
 
 @client.command()
-@commands.has_role(567389586934726677)
+#@commands.has_role(567389586934726677)
 async def find_targets(ctx, member, target_alliance, ground_max_percent = 120, ground_min_percent = 40, air_max_percent = 120, air_min_percent = 40): 
     ''' 
     Finds targets to attack in an enemy alliance for member
@@ -701,7 +701,7 @@ async def find_targets(ctx, member, target_alliance, ground_max_percent = 120, g
     else: 
         await ctx.send('The member is not a valid nation ID or link')
         return
-
+    '''
     res = requests.get(f'https://politicsandwar.com/index.php?id=15&keyword={target_alliance}&cat=alliance&ob=score&od=DESC&maximum=15&minimum=0&search=Go&memberview=true&beige=true')
     soup_data = BeautifulSoup(res.text, 'html.parser')
     data = soup_data.find(text = re.compile('Showing'))
@@ -731,11 +731,28 @@ async def find_targets(ctx, member, target_alliance, ground_max_percent = 120, g
                     alliance_nations_in_range[cells[1].find('a')['href'].split('=')[1]] = [cells[1].find('a').text, int(cells[5].text), score]
             except:
                 pass
+
+    '''
+    loading_msg = await ctx.send('Generating a list of potential targets...')
+    nations = requests.get(f'http://160.2.143.37:8080/nations/?key=davethsmellskrampuswhales&limit=50&alliance_name={target_alliance.lower()}&defensivewars={{"$ne":3}}&color={{"$ne":"beige"}}&sort_key=score&sort_dir=-1&project={{"name":1,"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
+    alliance_nations_in_range = [nation for nation in nations if (member_info['score'] * 0.75 <= nation['score'] <= member_info['score'] * 1.75 )]
+
     target_embed = discord.Embed(title= f"🎯 __Potential Targets for {member_info['leadername']}__", 
         description = f'{member_info["leadername"]} has {member_info["soldiers"]} soldiers, {member_info["tanks"]} tanks, {member_info["aircraft"]} planes, and {member_info["ships"]} ships.')
-    potential_targets = OrderedDict()
     
+    potential_targets = OrderedDict()
+    for nation in alliance_nations_in_range:
+        if (nation['soldiers'] + nation['tanks']*23 <= (member_info['soldiers'] + member_info['tanks'] * 23) * float(ground_max_percent)/100) and\
+            (nation['soldiers'] + nation['tanks']*23 >= (member_info['soldiers'] + member_info['tanks'] * 23) * float(ground_min_percent)/100) and\
+            nation['aircraft'] <= member_info['aircraft'] * float(air_max_percent)/100 and nation['aircraft'] >= member_info['aircraft'] * float(air_min_percent)/100:
+            potential_targets[nation['_id']] = nation
+            if not len(potential_targets) > 9:
+                link = f"https://politicsandwar.com/nation/id={nation['_id']}"
+                target_embed.add_field(name = '\u200b',
+                value = f"[{nation['name']}]({link}) \n{nation['cities']} cities • {nation['soldiers']} soldiers • {nation['tanks']} tanks • {nation['aircraft']} planes • {nation['ships']} ships",
+                inline = True)
     #Grabs military information for every nation in that list
+    '''
     for nation_id in alliance_nations_in_range.keys():
         res = requests.post(f'https://politicsandwar.com/nation/id={nation_id}')
         soup_data = BeautifulSoup(res.text, 'html.parser')
@@ -758,7 +775,7 @@ async def find_targets(ctx, member, target_alliance, ground_max_percent = 120, g
                 target_embed.add_field(name = '\u200b',
                 value = f'[{potential_targets[nation_id][0]}]({link}) \n{potential_targets[nation_id][1]} cities • {potential_targets[nation_id][3]} soldiers • {potential_targets[nation_id][4]} tanks • {potential_targets[nation_id][5]} planes • {potential_targets[nation_id][6]} ships',
                 inline = True)
-
+    '''
     await loading_msg.delete()
     target_embed.set_footer(text=f'Page 1/{int(math.ceil(len(potential_targets)/9))}')
     find_targets_msg = await ctx.send(embed = target_embed)
@@ -773,7 +790,74 @@ async def find_targets(ctx, member, target_alliance, ground_max_percent = 120, g
 
     i=0
     emoji=''
+        #Keeps going until timeout error
+    while True:
+        #If it is to front error
+        if emoji=='\u23ee':
+            i=0
+            target_embed.clear_fields()
+            for nation in [x[1] for x in list(potential_targets.items())][0:9]:
+                link = f"https://politicsandwar.com/nation/id={nation['_id']}"
+                target_embed.add_field(name = '\u200b',
+                value = f"[{nation['name']}]({link}) \n{nation['cities']} cities • {nation['soldiers']} soldiers • {nation['tanks']} tanks • {nation['aircraft']} planes • {nation['ships']} ships",
+                inline = True)
+            target_embed.set_footer(text=f'Page 1/{int(math.ceil(len(potential_targets)/9))}')
+            await find_targets_msg.edit(embed=target_embed)
+        #If left arrow
+        if emoji=='\u25c0':
+            if i>0:
+                i-=1
+                target_embed.clear_fields()
+                for nation in [x[1] for x in list(potential_targets.items())][i*9:min(i*9+9,len(potential_targets))]:
+                    link = f"https://politicsandwar.com/nation/id={nation['_id']}"
+                    target_embed.add_field(name = '\u200b',
+                    value = f"[{nation['name']}]({link}) \n{nation['cities']} cities • {nation['soldiers']} soldiers • {nation['tanks']} tanks • {nation['aircraft']} planes • {nation['ships']} ships",
+                    inline = True)
+                target_embed.set_footer(text=f'Page {i+1}/{int(math.ceil(len(potential_targets)/9))}')
+                await find_targets_msg.edit(embed=target_embed)
+        #If right arrow
+        if emoji=='\u25b6':
+            if i< int(len(potential_targets)/9):
+                i+=1
+                if float(i) == len(potential_targets)/9:
+                    i -= 1
+                target_embed.clear_fields()
+                for nation in [x[1] for x in list(potential_targets.items())][i*9:min(i*9+9,len(potential_targets))]:
+                    link = f"https://politicsandwar.com/nation/id={nation['_id']}"
+                    target_embed.add_field(name = '\u200b',
+                    value = f"[{nation['name']}]({link}) \n{nation['cities']} cities • {nation['soldiers']} soldiers • {nation['tanks']} tanks • {nation['aircraft']} planes • {nation['ships']} ships",
+                    inline = True)
+                target_embed.set_footer(text=f'Page {i+1}/{int(math.ceil(len(potential_targets)/9))}')
+                await find_targets_msg.edit(embed=target_embed)
+        #If to end arrow
+        if emoji=='\u23ed':
+            i=int(len(potential_targets)/9)
+            if float(i) == len(potential_targets)/9:
+                i -= 1
+            target_embed.clear_fields()
+            for nation in [x[1] for x in list(potential_targets.items())][i*9:min(i*9+9,len(potential_targets))]:
+                link = f"https://politicsandwar.com/nation/id={nation['_id']}"
+                target_embed.add_field(name = '\u200b',
+                value = f"[{nation['name']}]({link}) \n{nation['cities']} cities • {nation['soldiers']} soldiers • {nation['tanks']} tanks • {nation['aircraft']} planes • {nation['ships']} ships",
+                inline = True)
+            target_embed.set_footer(text=f'Page {i+1}/{int(math.ceil(len(potential_targets)/9))}')
+            await find_targets_msg.edit(embed=target_embed)
 
+        #Checks for reactions
+        try:
+            res=await client.wait_for('reaction_add',timeout=90, check = lambda reaction, user: reaction.message.id == find_targets_msg.id)
+            if str(res[1])!='War Pig#1807':
+                emoji=str(res[0].emoji)
+                await find_targets_msg.remove_reaction(res[0].emoji,res[1])
+        #Breaks loop if ends
+        except asyncio.TimeoutError:
+            break
+
+        #Removes reactions
+        if str(res[1])!='War Pig#1807':
+            emoji=str(res[0].emoji)
+            await find_targets_msg.remove_reaction(res[0].emoji,res[1])
+    '''
     #Keeps going until timeout error
     while True:
         #If it is to front error
@@ -841,14 +925,14 @@ async def find_targets(ctx, member, target_alliance, ground_max_percent = 120, g
         if str(res[1])!='War Pig#1807':
             emoji=str(res[0].emoji)
             await find_targets_msg.remove_reaction(res[0].emoji,res[1])
-
+    '''
     await find_targets_msg.clear_reactions()
 
 
 
 
 @client.command()
-@commands.has_role(567389586934726677)
+#@commands.has_role(567389586934726677)
 async def find_counters(ctx, target, ground_max_percent = math.inf, ground_min_percent = 80, air_max_percent = math.inf, air_min_percent = 80): 
     ''' 
     Finds counters for an enemy
@@ -889,7 +973,24 @@ async def find_counters(ctx, target, ground_max_percent = math.inf, ground_min_p
         return
 
     loading_msg = await ctx.send('Generating a list of potential members to counter...')
+    nations = requests.get(f'http://160.2.143.37:8080/nations/?key=davethsmellskrampuswhales&limit=50&alliance_name=carthago&offensivewars={{"$ne":5}}&sort_key=score&sort_dir=-1&project={{"name":1,"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
+    alliance_nations_in_range = [nation for nation in nations if (target_info['score'] * (1/1.75) <= nation['score'] <= target_info['score'] * (1/0.75) )]
 
+    counter_embed = discord.Embed(title= f"🎯 __Potential Counter for {target_info['leadername']} ({target_info['slots']}):__", 
+        description = f'{target_info["leadername"]} has {target_info["soldiers"]} soldiers, {target_info["tanks"]} tanks, {target_info["aircraft"]} planes, and {target_info["ships"]} ships.')
+   
+    potential_counters = OrderedDict()
+    for nation in alliance_nations_in_range:
+        if (nation['soldiers'] + nation['tanks']*23 <= max((target_info['soldiers'] + target_info['tanks'] * 23),0.01) * float(ground_max_percent)/100) and\
+            (nation['soldiers'] + nation['tanks']*23 >= (target_info['soldiers'] + target_info['tanks'] * 23) * float(ground_min_percent)/100) and\
+            nation['aircraft'] <= max(target_info['aircraft'],0.01) * float(air_max_percent)/100 and nation['aircraft'] >= target_info['aircraft'] * float(air_min_percent)/100:
+            potential_counters[nation['_id']] = nation
+            if not len(potential_counters) > 9:
+                link = f"https://politicsandwar.com/nation/id={nation['_id']}"
+                counter_embed.add_field(name = '\u200b',
+                value = f"[{nation['name']}]({link}) \n{nation['cities']} cities • {nation['soldiers']} soldiers • {nation['tanks']} tanks • {nation['aircraft']} planes • {nation['ships']} ships",
+                inline = True)
+    '''
     res = requests.get(f'https://politicsandwar.com/index.php?id=15&keyword=Carthago&cat=alliance&ob=score&od=DESC&maximum=15&minimum=0&search=Go&memberview=true')
     soup_data = BeautifulSoup(res.text, 'html.parser')
     data = soup_data.find(text = re.compile('Showing'))
@@ -932,7 +1033,7 @@ async def find_counters(ctx, target, ground_max_percent = math.inf, ground_min_p
                 counter_embed.add_field(name = '\u200b',
                 value = f'[{potential_counters[nation_id][0]}]({link}) \n{potential_counters[nation_id][1]} cities • {potential_counters[nation_id][3]} soldiers • {potential_counters[nation_id][4]} tanks • {potential_counters[nation_id][5]} planes • {potential_counters[nation_id][6]} ships',
                 inline = True)
-
+       '''
     counter_embed.set_footer(text=f'Page 1/{int(math.ceil(len(potential_counters)/9))}')
 
     await loading_msg.delete()
@@ -946,7 +1047,62 @@ async def find_counters(ctx, target, ground_max_percent = math.inf, ground_min_p
 
     i=0
     emoji=''
+    while True:
+        if emoji=='\u23ee':
+            i=0
+            counter_embed.clear_fields()
+            for nation in [x[1] for x in list(potential_counters.items())][0:9]:
+                link = f"https://politicsandwar.com/nation/id={nation['_id']}"
+                counter_embed.add_field(name = '\u200b',
+                value = f"[{nation['name']}]({link}) \n{nation['cities']} cities • {nation['soldiers']} soldiers • {nation['tanks']} tanks • {nation['aircraft']} planes • {nation['ships']} ships",
+                inline = True)
+            counter_embed.set_footer(text=f'Page 1/{int(math.ceil(len(potential_counters)/9))}')
+            await find_counters_msg.edit(embed=counter_embed)
+        if emoji=='\u25c0':
+            if i>0:
+                i-=1
+                counter_embed.clear_fields()
+                for nation in [x[1] for x in list(potential_counters.items())][i*9:min(i*9+9,len(potential_counters))]:
+                    link = f"https://politicsandwar.com/nation/id={nation['_id']}"
+                    counter_embed.add_field(name = '\u200b',
+                    value = f"[{nation['name']}]({link}) \n{nation['cities']} cities • {nation['soldiers']} soldiers • {nation['tanks']} tanks • {nation['aircraft']} planes • {nation['ships']} ships",
+                    inline = True)
+                counter_embed.set_footer(text=f'Page {i+1}/{int(math.ceil(len(potential_counters)/9))}')
+                await find_counters_msg.edit(embed=counter_embed)
+        if emoji=='\u25b6':
+            if i< int(len(potential_counters)/9):
+                i+=1
+                if float(i) == len(potential_counters)/9:
+                    i -= 1
+                counter_embed.clear_fields()
+                for nation in [x[1] for x in list(potential_counters.items())][i*9:min(i*9+9,len(potential_counters))]:
+                    link = f"https://politicsandwar.com/nation/id={nation['_id']}"
+                    counter_embed.add_field(name = '\u200b',
+                    value = f"[{nation['name']}]({link}) \n{nation['cities']} cities • {nation['soldiers']} soldiers • {nation['tanks']} tanks • {nation['aircraft']} planes • {nation['ships']} ships",
+                    inline = True)
+                counter_embed.set_footer(text=f'Page {i+1}/{int(math.ceil(len(potential_counters)/9))}')
+                await find_counters_msg.edit(embed=counter_embed)
+        if emoji=='\u23ed':
+            i=int(len(potential_counters)/9)
+            if float(i) == len(potential_counters)/9:
+                i -= 1
+            counter_embed.clear_fields()
+            for nation in [x[1] for x in list(potential_counters.items())][i*9:min(i*9+9,len(potential_counters))]:
+                link = f"https://politicsandwar.com/nation/id={nation['_id']}"
+                counter_embed.add_field(name = '\u200b',
+                value = f"[{nation['name']}]({link}) \n{nation['cities']} cities • {nation['soldiers']} soldiers • {nation['tanks']} tanks • {nation['aircraft']} planes • {nation['ships']} ships",
+                inline = True)
+            counter_embed.set_footer(text=f'Page {i+1}/{int(math.ceil(len(potential_counters)/9))}')
+            await find_counters_msg.edit(embed=counter_embed)
+        try:
+            res = await client.wait_for('reaction_add',timeout=90, check = lambda reaction, user: reaction.message.id == find_counters_msg.id)
+            if str(res[1])!='War Pig#1807':
+                emoji=str(res[0].emoji)
+                await find_counters_msg.remove_reaction(res[0].emoji,res[1])
+        except asyncio.TimeoutError:
+            break
 
+    '''
     while True:
         if emoji=='\u23ee':
             i=0
@@ -1001,7 +1157,7 @@ async def find_counters(ctx, target, ground_max_percent = math.inf, ground_min_p
                 await find_counters_msg.remove_reaction(res[0].emoji,res[1])
         except asyncio.TimeoutError:
             break
-
+    '''
 
     await find_counters_msg.clear_reactions()
 

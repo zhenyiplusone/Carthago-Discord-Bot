@@ -131,4 +131,9 @@ def alliance_nation_info(id):
     api_key = '69e9cc72114cd2'
     return requests.get(f'https://politicsandwar.com/api/nation/id={id}&key={api_key}').json()
 if __name__ == '__main__':
-    print(get_pnw_info('https://politicsandwar.com/nation/id=48730'))
+    member_info = {'score': 2500.0}
+    nations = requests.get(f'http://160.2.143.37:8080/nations/?key=davethsmellskrampuswhales&limit=50&alliance_name=carthago&defensivewars={{"$ne":3}}&color={{"$ne":"beige"}}&sort_key=score&sort_dir=-1&project={{"name":1,"score":1,"solders":1,"tanks":1,"aircraft":1,"ships":1}}').json()
+    alliance_nations_in_range = [nation for nation in nations if (member_info['score'] * 0.75 <= nation['score'] <= member_info['score'] * 1.75 )]
+    print(alliance_nations_in_range)
+
+    #print(get_pnw_info('https://politicsandwar.com/nation/id=48730'))
