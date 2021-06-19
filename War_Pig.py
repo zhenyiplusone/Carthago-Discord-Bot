@@ -104,9 +104,9 @@ async def on_ready():
 
 
 
-
+war_types = ["RAID", "ORDINARY", "ATTRITION"]
 @client.command()
-async def bulk_create(ctx):
+async def bulk_create(ctx, war_type = 2, api = 'pnw'):
     '''
     Creates a list of channels based on csv target list
     '''
@@ -115,7 +115,6 @@ async def bulk_create(ctx):
 
     #Sees if the user has permissions to manage channels in the category and access bot
     if category.permissions_for(ctx.author).manage_channels:
-        
         #for loop to get attachment
         for attachment in ctx.message.attachments:
             await attachment.save(f'csv/{attachment.filename}')
@@ -126,40 +125,119 @@ async def bulk_create(ctx):
             await ctx.send('No Attachment Found')
 
         #Access attachment and creates channels with it
-        with open(f'csv/{attachment.filename}') as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter=',')
-            line = 0
-            update_dict()
-            #Goes through each row to create channels
-            for row in csv_reader:
-                #Makes sure this is not the heading and it isn't an invalid row before creating a channel
-                if line != 0 and row[1] != '#ERROR!':
-                    print(f'{row[1]} is the target. Attacker 1 is {row[4]}, attacker 2 is {row[6]},\
-                     and attacker 3 is {row[8]}')
-                    target_name = row[1]
-                    target_id = row[2]
-                    attackers = [row[4], row[6], row[8]]
-                    defenders = [row[11],row[13],row[15],row[17],row[19]]
-                    channel_name = target_name.replace(' ', '-') + '-' + target_id
+        if api == 'pnw':
+            with open(f'csv/{attachment.filename}') as csv_file:
+                csv_reader = csv.reader(csv_file, delimiter=',')
+                line = 0
+                update_dict()
+                #Goes through each row to create channels
+                for row in csv_reader:
+                    #Makes sure this is not the heading and it isn't an invalid row before creating a channel
+                    if line != 0 and row[1] != '#ERROR!':
+                        print(f'{row[1]} is the target. Attacker 1 is {row[4]}, attacker 2 is {row[6]},\
+                         and attacker 3 is {row[8]}')
+                        target_name = row[1]
+                        target_id = row[2]
+                        attackers = [row[4], row[6], row[8]]
+                        defenders = [row[11],row[13],row[15],row[17],row[19]]
+                        channel_name = target_name.replace(' ', '-') + '-' + target_id
 
+                        #Creates the channel and edits the topic
+                        channel = None
+                        
+                        try: 
+                            channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on {row[0]}')
+                        except discord.HTTPException:
+                            channel = await ctx.guild.create_text_channel(channel_name, category = back_up_category, topic = f'War on {row[0]}')
+
+                        war_embed = discord.Embed(title= f"⚔️ __Target: {' '.join(channel_name.split('-')[:-1])}__", 
+                            description= f"Please declare {war_types[war_type]} war on {row[0]}", color=0xcb2400,
+                            url = f'https://politicsandwar.com/nation/war/declare/id={row[0].split("=")[1]}')
+
+
+                        mil_count = get_pnw_mil(f'https://politicsandwar.com/nation/id={row[0].split("=")[1]}')
+
+                        war_embed.add_field(name = '__Military Information:__', value = f'{channel_name.split("-")[0]} has {mil_count["Soldiers"]} soldiers, {mil_count["Tanks"]} tanks, {mil_count["Planes"]} planes, and {mil_count["Ships"]} ships', inline = False)
+
+                        ping_list = await coord_perms(attackers, channel, channel_name, ctx)
+                        #Gets DM list for members to attack and puts out their nation link
+                        for index, member in enumerate(ping_list): 
+                            link = f'https://politicsandwar.com/nation/id={nation_dict.get(member, "N/A")}'
+                            user = client.get_user(member)
+                            war_embed.add_field(name= f"__Attacker {index + 1}:__", value=f"[{user.display_name}]({link})", inline=True)
+                            try:
+                                await user.send(content = f"It's time to send in the elephants! Please check <#{channel.id}> for your **war assignment**. Thank You! P.S. Start with a **dogfight against their aircraft**, then **assassinate their spies** and post results in <#639621955795812362> :)")
+                            except: 
+                                await ctx.send(f'Could not DM {user.name} because they have disabled DMs with bots, please message them manually.')
+                        def_ping_list = await coord_perms(defenders, channel, channel_name, ctx)
+                        
+                        ##Gets DM list for defending members and puts out their nation link
+                        for index, member in enumerate(def_ping_list): 
+                            link = f'https://politicsandwar.com/nation/id={nation_dict.get(member, "N/A")}'
+                            user = client.get_user(member)
+                            war_embed.add_field(name= f"__Defender {index + 1}:__", value=f"[{user.display_name}]({link})", inline=True)
+                            try:
+                                await user.send(content = f"Carthago is under siege! You've been attacked. Please check <#{channel.id}> to coordinate with your peers. Thank you!")
+                            except: 
+                                await ctx.send(f'Could not DM {user.name} because they have disabled DMs with bots, please message them manually.')
+                        
+                        war_embed.add_field(name="__Reminder__", value="1.) Make sure you have enough resources including food and uranium, ping gov if you need more\
+                                \n 2.) Look over their military before going in and plan out the best move\
+                                \n 3.) Talk and coordinate with fellow members, declare at the same time and help each other\
+                                \n 4.) Again, start with a dogfight against their aircraft, then assassinate their spies and post results in <#639621955795812362>\
+                                \n Good luck!", inline=False)
+                        await channel.send(f'{ping(ping_list)}{ping(def_ping_list)}',embed = war_embed)
+
+                        #Gets the permissions for the members set up and pings them
+
+                    line += 1
+
+                await ctx.send('Channels are finished being create, good luck in the wars to come!')
+
+        elif api[0].lower() == 's':
+            print('hi')
+            with open(f'csv/{attachment.filename}') as csv_file:
+                csv_reader = csv.reader(csv_file, delimiter=',')
+                update_dict()
+                next(csv_reader)
+                wars = []
+                nations_to_api = set()
+                #Goes through each row to create channels
+                for row in csv_reader:
+                    #Makes sure this is not the heading and it isn't an invalid row before creating a channel
+                    if row[1] != '#ERROR!':
+                        war = {}
+                        war['target_name'] = row[1]
+                        war['target_id'] = row[2]
+                        war['attackers'] = [row[4], row[6], row[8]]
+                        war['defenders'] = [row[11],row[13],row[15],row[17],row[19]]
+                        wars.append(war)
+                        nations_to_api.add(row[2])
+                id_string = ",".join(nations_to_api)
+                nations = requests.get(f'http://160.2.143.37:8080/nations/?key=davethsmellskrampuswhales&limit=50&_id={id_string}&sort_key=score&sort_dir=-1&project={{"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
+                war_db = {}
+                for nation in nations:
+                    war_db[nation['_id']] = nation
+                
+                for war in wars:
+                    channel_name = war['target_name'].replace(' ', '-') + '-' + war['target_id']
+                    mil_count = war_db[int(war['target_id'])]
                     #Creates the channel and edits the topic
                     channel = None
                     
                     try: 
-                        channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on {row[0]}')
+                        channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on https://politicsandwar.com/nation/id={war["target_id"]}')
                     except discord.HTTPException:
-                        channel = await ctx.guild.create_text_channel(channel_name, category = back_up_category, topic = f'War on {row[0]}')
+                        channel = await ctx.guild.create_text_channel(channel_name, category = back_up_category, topic = f'War on https://politicsandwar.com/nation/id={war["target_id"]}')
 
                     war_embed = discord.Embed(title= f"⚔️ __Target: {' '.join(channel_name.split('-')[:-1])}__", 
-                        description= f"Please declare ATTRITION war on {row[0]}", color=0xcb2400,
-                        url = f'https://politicsandwar.com/nation/war/declare/id={row[0].split("=")[1]}')
+                        description= f"Please declare {war_types[war_type]} war on https://politicsandwar.com/nation/id={war['target_id']}", color=0xcb2400,
+                        url = f'https://politicsandwar.com/nation/war/declare/id={war["target_id"]}')
 
 
-                    mil_count = get_pnw_mil(f'https://politicsandwar.com/nation/id={row[0].split("=")[1]}')
+                    war_embed.add_field(name = '__Military Information:__', value = f'{channel_name.split("-")[0]} has {mil_count["soldiers"]} soldiers, {mil_count["tanks"]} tanks, {mil_count["aircraft"]} planes, and {mil_count["ships"]} ships', inline = False)
 
-                    war_embed.add_field(name = '__Military Information:__', value = f'{channel_name.split("-")[0]} has {mil_count["Soldiers"]} soldiers, {mil_count["Tanks"]} tanks, {mil_count["Planes"]} planes, and {mil_count["Ships"]} ships', inline = False)
-
-                    ping_list = await coord_perms(attackers, channel, channel_name, ctx)
+                    ping_list = await coord_perms(war['attackers'], channel, channel_name, ctx)
                     #Gets DM list for members to attack and puts out their nation link
                     for index, member in enumerate(ping_list): 
                         link = f'https://politicsandwar.com/nation/id={nation_dict.get(member, "N/A")}'
@@ -169,7 +247,7 @@ async def bulk_create(ctx):
                             await user.send(content = f"It's time to send in the elephants! Please check <#{channel.id}> for your **war assignment**. Thank You! P.S. Start with a **dogfight against their aircraft**, then **assassinate their spies** and post results in <#639621955795812362> :)")
                         except: 
                             await ctx.send(f'Could not DM {user.name} because they have disabled DMs with bots, please message them manually.')
-                    def_ping_list = await coord_perms(defenders, channel, channel_name, ctx)
+                    def_ping_list = await coord_perms(war['defenders'], channel, channel_name, ctx)
                     
                     ##Gets DM list for defending members and puts out their nation link
                     for index, member in enumerate(def_ping_list): 
@@ -190,9 +268,9 @@ async def bulk_create(ctx):
 
                     #Gets the permissions for the members set up and pings them
 
-                line += 1
 
-            await ctx.send('Channels are finished being create, good luck in the wars to come!')
+                await ctx.send('Channels are finished being create, good luck in the wars to come!')
+
     #If they don't have permission, tell them
     else:
         await ctx.send('You do not have permissions to create war channels')
@@ -238,7 +316,6 @@ async def run_test_sheet(ctx):
 """
 
 
-war_types = ["RAID", "ORDINARY", "ATTRITION"]
 @client.command()
 async def create_chan(ctx, nation_link, war_type: Optional[int] = 0, reason: Optional[str] = "Carthago Counter", *members: Optional[discord.Member]):
     ''' 
