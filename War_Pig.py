@@ -48,6 +48,7 @@ client.remove_command('help')
 gaccount = gspread.service_account(filename = 'war pig-9478580af5de.json')
 
 gsheet = gaccount.open("Discord Tracking Sheet").sheet1
+# make it [1:]
 member_names = gsheet.col_values(1)
 member_names.pop(0)
 nation_id = gsheet.col_values(2)
@@ -60,15 +61,12 @@ member_dict = dict(zip(member_names, dis_id))
 nation_dict = dict(zip(dis_id, nation_id))  
 rev_nation_dict = dict(zip(nation_id, dis_id))
 
-'''
-wargsheet = gaccount.open("Carthago MilCom").worksheet("Spheres")
-sphere_names = wargsheet.row_values(1)
-alliances_in_spheres = []
-for x in range(1,len(sphere_names)):
-    alliances_in_spheres.append(wargsheet.col_values(x)[1:])
 
-spheres_to_member_alliances = dict(zip(sphere_names, alliances_in_spheres))
-print(spheres_to_member_alliances)'''
+wargsheet = gaccount.open("Carthago Milcom & Personnel").worksheet("Spheres")
+sphere_names = [sphere.lower() for sphere in wargsheet.col_values(1)[1:]]
+sphere_alliances = [sphere.split(',') for sphere in wargsheet.col_values(3)[1:]]
+spheres = dict(zip(sphere_names, sphere_alliances))
+
 
 '''member_names = ['Azrael','New Suleiman','Daveth','Locinii','Lothair of Acre','GrandmasterBee','Bmber',
 'Aaron Comneno','Asierith','Auto Von Bismarck','Ragnarok8085','Tamasith','Velium','Thibaud Brent',
@@ -737,8 +735,8 @@ async def add(ctx, type, reason = None, *nations):
 
 
 @client.command()
-@commands.has_role(567389586934726677)
-async def find_targets(ctx, member, target_alliance, ground_max_percent = 120, ground_min_percent = 40, air_max_percent = 120, air_min_percent = 40): 
+#@commands.has_role(567389586934726677)
+async def find_targets(ctx, member, target_alliance, ground_max_percent = 120, ground_min_percent = 0, air_max_percent = 120, air_min_percent = 0): 
     ''' 
     Finds targets to attack in an enemy alliance for member
 
@@ -810,8 +808,15 @@ async def find_targets(ctx, member, target_alliance, ground_max_percent = 120, g
                 pass
 
     '''
+    target_alliance = target_alliance.lower()
     loading_msg = await ctx.send('Generating a list of potential targets...')
-    nations = requests.get(f'http://160.2.143.37:8080/nations/?key=davethsmellskrampuswhales&limit=50&alliance_name={target_alliance.lower()}&defensivewars={{"$ne":3}}&color={{"$ne":"beige"}}&sort_key=score&sort_dir=-1&project={{"name":1,"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
+    update_dict()
+    print(spheres.keys())
+    if(target_alliance.replace('+',' ') in spheres):
+        nations = requests.get(f'http://160.2.143.37:8080/nations/?key=davethsmellskrampuswhales&limit=1000&alliance={",".join(spheres[target_alliance.replace("+"," ")])}&defensivewars={{"$ne":3}}&color={{"$ne":"beige"}}&sort_key=score&sort_dir=-1&project={{"name":1,"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
+    else:
+        nations = requests.get(f'http://160.2.143.37:8080/nations/?key=davethsmellskrampuswhales&limit=1000&alliance_name={target_alliance}&defensivewars={{"$ne":3}}&color={{"$ne":"beige"}}&sort_key=score&sort_dir=-1&project={{"name":1,"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
+    
     alliance_nations_in_range = [nation for nation in nations if (member_info['score'] * 0.75 <= nation['score'] <= member_info['score'] * 1.75 )]
 
     target_embed = discord.Embed(title= f"🎯 __Potential Targets for {member_info['leadername']}__", 
@@ -1528,16 +1533,17 @@ def ann(df, value):
 
 
 def update_dict():
-        member_names = gsheet.col_values(1)
-        member_names.pop(0)
-        nation_id = gsheet.col_values(2)
-        nation_id.pop(0)
-        dis_id = gsheet.col_values(4)
-        dis_id.pop(0)
-        nation_id = list(map(int, nation_id))
-        dis_id = list(map(int, dis_id))
-        member_dict = dict(zip(member_names, dis_id))
-        nation_dict = dict(zip(dis_id, nation_id))    
+    global member_dict
+    global nation_dict
+    global spheres
+    member_names = gsheet.col_values(1)[1:]
+    nation_id = [int(nation) for nation in gsheet.col_values(2)[1:]]
+    dis_id = [int(disc) for disc in gsheet.col_values(4)[1:]]
+    member_dict = dict(zip(member_names, dis_id))
+    nation_dict = dict(zip(dis_id, nation_id))
+    sphere_names = [sphere.lower() for sphere in wargsheet.col_values(1)[1:]]
+    sphere_alliances = [sphere.split(',') for sphere in wargsheet.col_values(3)[1:]]
+    spheres = dict(zip(sphere_names, sphere_alliances))    
 
 
 
