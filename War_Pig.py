@@ -735,7 +735,7 @@ async def add(ctx, type, reason = None, *nations):
 
 
 @client.command()
-#@commands.has_role(567389586934726677)
+@commands.has_role(567389586934726677)
 async def find_targets(ctx, member, target_alliance, ground_max_percent = 120, ground_min_percent = 0, air_max_percent = 120, air_min_percent = 0): 
     ''' 
     Finds targets to attack in an enemy alliance for member
@@ -1055,12 +1055,12 @@ async def find_counters(ctx, target, ground_max_percent = math.inf, ground_min_p
         return
 
     loading_msg = await ctx.send('Generating a list of potential members to counter...')
-    nations = requests.get(f'http://160.2.143.37:8080/nations/?key=davethsmellskrampuswhales&limit=50&alliance_name=carthago&offensivewars={{"$ne":5}}&sort_key=score&sort_dir=-1&project={{"name":1,"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
+    nations = requests.get(f'http://160.2.143.37:8080/nations/?key=davethsmellskrampuswhales&limit=500&alliance_name=carthago&offensivewars={{"$ne":5}}&sort_key=score&sort_dir=-1&project={{"name":1,"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
     alliance_nations_in_range = [nation for nation in nations if (target_info['score'] * (1/1.75) <= nation['score'] <= target_info['score'] * (1/0.75) )]
-
     counter_embed = discord.Embed(title= f"🎯 __Potential Counter for {target_info['leadername']} ({target_info['slots']}):__", 
         description = f'{target_info["leadername"]} has {target_info["soldiers"]} soldiers, {target_info["tanks"]} tanks, {target_info["aircraft"]} planes, and {target_info["ships"]} ships.')
-   
+    
+
     potential_counters = OrderedDict()
     for nation in alliance_nations_in_range:
         if (nation['soldiers'] + nation['tanks']*23 <= max((target_info['soldiers'] + target_info['tanks'] * 23),0.01) * float(ground_max_percent)/100) and\
