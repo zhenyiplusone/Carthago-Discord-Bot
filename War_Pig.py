@@ -38,6 +38,7 @@ from API import req_info
 from API import ID_info
 from openpyxl import load_workbook
 from typing import Optional
+import sys
 
 intents = discord.Intents.default()
 intents.members = True
@@ -67,7 +68,7 @@ sphere_names = [sphere.lower() for sphere in wargsheet.col_values(1)[1:]]
 sphere_alliances = [sphere.split(',') for sphere in wargsheet.col_values(3)[1:]]
 spheres = dict(zip(sphere_names, sphere_alliances))
 
-
+warmembergsheet = gaccount.open("Carthago Milcom & Personnel").worksheet("Member Info")
 '''member_names = ['Azrael','New Suleiman','Daveth','Locinii','Lothair of Acre','GrandmasterBee','Bmber',
 'Aaron Comneno','Asierith','Auto Von Bismarck','Ragnarok8085','Tamasith','Velium','Thibaud Brent',
 'Billy','Petko Vidmar','Roach','Al Sahina','Patro','Yuri B Molotov','Miyamoto Musashi',
@@ -735,8 +736,7 @@ async def add(ctx, type, reason = None, *nations):
 
 
 @client.command()
-@commands.has_role(567389586934726677)
-async def find_targets(ctx, member, target_alliance, ground_max_percent = 120, ground_min_percent = 0, air_max_percent = 120, air_min_percent = 0): 
+async def find_targets_old(ctx, member, target_alliance, ground_max_percent = 120, ground_min_percent = 0, air_max_percent = 120, air_min_percent = 0): 
     ''' 
     Finds targets to attack in an enemy alliance for member
 
@@ -1011,11 +1011,19 @@ async def find_targets(ctx, member, target_alliance, ground_max_percent = 120, g
     await find_targets_msg.clear_reactions()
 
 
+#CURRENT TESTING GROUND
+@client.command()
+async def find_counters(ctx, target, ground_max_percent = math.inf, ground_min_percent = 80, air_max_percent = math.inf, air_min_percent = 80): 
+    await find_combined(ctx, "Counters", target, "carthago", 1/1.75, 1/0.75, ground_max_percent, ground_min_percent, air_max_percent, air_min_percent)
+
+@client.command()
+async def find_targets(ctx, member, target_alliance, ground_max_percent = 120, ground_min_percent = 0, air_max_percent = 120, air_min_percent = 0): 
+    await find_combined(ctx, "Targets", member, target_alliance, 0.75, 1.75, ground_max_percent, ground_min_percent, air_max_percent, air_min_percent)
 
 
 @client.command()
-@commands.has_role(567389586934726677)
-async def find_counters(ctx, target, ground_max_percent = math.inf, ground_min_percent = 80, air_max_percent = math.inf, air_min_percent = 80): 
+async def find_counters_old(ctx, target, ground_max_percent = math.inf, ground_min_percent = 80, air_max_percent = math.inf, air_min_percent = 80): 
+
     ''' 
     Finds counters for an enemy
 
@@ -1267,6 +1275,171 @@ async def active_wars(ctx):
 
     await ctx.send(embed = active_war_embed)
 
+async def find_combined(ctx, type, member, target_alliance, score_min, score_max, ground_max_percent, ground_min_percent, air_max_percent, air_min_percent):
+    ''' 
+    Finds targets to attack in an enemy alliance for member
+
+    :param member: The nation link or nation id of member
+    :param target_alliance: Alliance to search for targets in
+    :param ground_max_percent: Upper range (example 120%) of ground units enemy can have. Default is 120.
+    :param ground_min_percent: Lower range (example 70%) of ground units enemy can have. Default is 40.
+    :param air_max_percent: Upper range (example 120%) of planes enemy can have. Default is 120.
+    :param air_min_percent: Lower range (example 70%) of planes enemy can have. Default is 40.
+    ''' 
+    member_info = {'leadername': '', 'score': 0, 'soldiers': 0, 'tanks': 0, 'aircraft': 0, 'ships': 0}
+    if(re.search(r'politicsandwar.com/nation/id=\d{1,7}', member)):
+        try:
+            raw_member_info = ID_info(member.split('=')[1])
+            member_info['leadername'] = raw_member_info['leadername']
+            member_info['score'] = float(raw_member_info['score'])
+            member_info['slots'] = f'{raw_member_info["defensivewars"]}/3 slots'
+            for key in ['soldiers', 'tanks', 'aircraft', 'ships']:
+                member_info[key] = int(raw_member_info[key])
+        except:
+            await ctx.send('API key ran out or the member is not a valid nation ID or link')
+            return
+  
+    #Sees if this is nation ID format
+    elif(re.search(r'\d{1,7}', member)):
+        #Tries if this is valid nation link
+        try:
+            raw_member_info = ID_info(member)
+            member_info['leadername'] = raw_member_info['leadername']
+            member_info['score'] = float(raw_member_info['score'])
+            member_info['slots'] = f'{raw_member_info["defensivewars"]}/3 slots'
+            for key in ['soldiers', 'tanks', 'aircraft', 'ships']:
+                member_info[key] = int(raw_member_info[key])
+        except:
+            await ctx.send('API key ran out or the member is not a valid nation ID or link')
+            return
+    #If invalid format
+    else: 
+        await ctx.send('The member is not a valid nation ID or link')
+        return
+   
+    target_alliance = target_alliance.lower()
+    loading_msg = await ctx.send('Generating a list of potential targets...')
+    update_dict()
+    slots =  "defensivewars"
+    slot_num = 3
+    if type == "Counters":
+        slots = "offensivewars"
+        slot_num = 5
+    try:
+        if(target_alliance.replace('+',' ') in spheres):
+            #160.2.143.37 is the real
+            nations = requests.get(f'http://160.2.143.37:8080/nations/?key=davethsmellskrampuswhales&limit=1000&alliance={",".join(spheres[target_alliance.replace("+"," ")])}&{slots}={{"$ne":{slot_num}}}&color={{"$ne":"beige"}}&sort_key=score&sort_dir=-1&project={{"name":1,"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
+        else:
+            nations = requests.get(f'http://160.2.143.37:8080/nations/?key=davethsmellskrampuswhales&limit=1000&alliance_name={target_alliance}&{slots}={{"$ne":{slot_num}}}&color={{"$ne":"beige"}}&sort_key=score&sort_dir=-1&project={{"name":1,"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
+    except (requests.exceptions.ConnectionError):
+        ctx.send("Trouble connecting to Shama's API.... Piggy and Shama have been notified")
+        #PnW API
+        '''
+        res = requests.get(f'https://politicsandwar.com/index.php?id=15&keyword=Carthago&cat=alliance&ob=score&od=DESC&maximum=15&minimum=0&search=Go&memberview=true')
+        soup_data = BeautifulSoup(res.text, 'html.parser')
+        data = soup_data.find(text = re.compile('Showing'))
+        num_nations = float(data.split()[3])
+                
+                #Grabs data for every nation in the alliance
+        alliance_nations_in_range = {}
+        for nations in range(0, math.ceil(num_nations/50)):
+            res = requests.get(f'https://politicsandwar.com/index.php?id=15&keyword=Carthago&cat=alliance&ob=score&od=DESC&maximum={50*(nations+1)}&minimum={50*nations}&search=Go&memberview=true')
+            soup_data = BeautifulSoup(res.text, 'html.parser')
+            data = soup_data.find_all("td", attrs={"class": "right"}, text = re.compile(r'^[1-9]\d*$'))
+
+            rows = soup_data.find("table", {'class': 'nationtable'}).find_all('tr')
+            for row in rows[1:]:
+                cells = row.find_all('td')
+                score = float(cells[6].text.replace(' ', '').replace(',', ''))
+                if(target_info['score'] * (1/1.75) <= score <= target_info['score'] * (1/0.75) ):
+                    alliance_nations_in_range[cells[1].find('a')['href'].split('=')[1]] = [cells[1].find('a').text, int(cells[5].text), score]'''
+        
+        member = ctx.guild.get_member(236978935538122754)
+        channel = await member.create_dm()
+        await channel.send(f"Someone broke war pig: {sys.exc_info()[0]}, go annoy Shama")  
+
+    alliance_nations_in_range = [nation for nation in nations if (member_info['score'] * score_min <= nation['score'] <= member_info['score'] * score_max)]
+
+    target_embed = discord.Embed(title= f"🎯 __Potential {type} for {member_info['leadername'] } ({member_info['slots']}):__", 
+        description = f'{member_info["leadername"]} has {member_info["soldiers"]} soldiers, {member_info["tanks"]} tanks, {member_info["aircraft"]} planes, and {member_info["ships"]} ships.')
+         
+    potential_targets = OrderedDict()
+    for nation in alliance_nations_in_range:
+        if (nation['soldiers'] + nation['tanks']*23 <= max((member_info['soldiers'] + member_info['tanks'] * 23),0.01) * float(ground_max_percent)/100) and\
+            (nation['soldiers'] + nation['tanks']*23 >= (member_info['soldiers'] + member_info['tanks'] * 23) * float(ground_min_percent)/100) and\
+            nation['aircraft'] <= max(member_info['aircraft'],0.01)  * float(air_max_percent)/100 and nation['aircraft'] >= member_info['aircraft'] * float(air_min_percent)/100:
+            potential_targets[nation['_id']] = nation
+            if not len(potential_targets) > 9:
+                link = f"https://politicsandwar.com/nation/id={nation['_id']}"
+                target_embed.add_field(name = '\u200b',
+                value = f"[{nation['name']}]({link}) \n{nation['cities']} cities • {nation['soldiers']} soldiers • {nation['tanks']} tanks • {nation['aircraft']} planes • {nation['ships']} ships",
+                inline = True)
+
+    await loading_msg.delete()
+    target_embed.set_footer(text=f'Page 1/{int(math.ceil(len(potential_targets)/9))}')
+    find_targets_msg = await ctx.send(embed = target_embed)
+    
+    #Only adds scrolling functions when more than 9 nations appear
+    if len(potential_targets) > 9:
+        await find_targets_msg.add_reaction('\u23ee')
+        await find_targets_msg.add_reaction('\u25c0')
+        await find_targets_msg.add_reaction('\u25b6')
+        await find_targets_msg.add_reaction('\u23ed')
+
+    async def embed_creation(ctx, i, nation, potential_targets, target_embed):
+        target_embed.clear_fields()
+        for nation in [x[1] for x in list(potential_targets.items())][i*9:min(i*9+9,len(potential_targets))]:
+            link = f"https://politicsandwar.com/nation/id={nation['_id']}"
+            target_embed.add_field(name = '\u200b',
+            value = f"[{nation['name']}]({link}) \n{nation['cities']} cities • {nation['soldiers']} soldiers • {nation['tanks']} tanks • {nation['aircraft']} planes • {nation['ships']} ships",
+            inline = True)
+        target_embed.set_footer(text=f'Page {i+1}/{int(math.ceil(len(potential_targets)/9))}')
+        await find_targets_msg.edit(embed=target_embed)
+   
+    i=0
+    emoji=''
+        #Keeps going until timeout error
+    while True:
+        #If it is to front error
+        if emoji=='\u23ee':
+            i=0
+            await embed_creation(ctx, i, nation, potential_targets, target_embed)
+        #If left arrow
+        if emoji=='\u25c0':
+            if i>0:
+                i-=1
+                await embed_creation(ctx, i, nation, potential_targets, target_embed)
+        #If right arrow
+        if emoji=='\u25b6':
+            if i< int(len(potential_targets)/9):
+                i+=1
+                if float(i) == len(potential_targets)/9:
+                    i -= 1
+                await embed_creation(ctx, i, nation, potential_targets,target_embed)
+        #If to end arrow
+        if emoji=='\u23ed':
+            i=int(len(potential_targets)/9)
+            if float(i) == len(potential_targets)/9:
+                i -= 1
+            await embed_creation(ctx, i, nation, potential_targets, target_embed)
+
+        #Checks for reactions
+        try:
+            res=await client.wait_for('reaction_add',timeout=90, check = lambda reaction, user: reaction.message.id == find_targets_msg.id)
+            if str(res[1])!='War Pig#1807':
+                emoji=str(res[0].emoji)
+                await find_targets_msg.remove_reaction(res[0].emoji,res[1])
+        #Breaks loop if ends
+        except asyncio.TimeoutError:
+            break
+
+        #Removes reactions
+        if str(res[1])!='War Pig#1807':
+            emoji=str(res[0].emoji)
+            await find_targets_msg.remove_reaction(res[0].emoji,res[1])
+  
+    await find_targets_msg.clear_reactions()
+
 async def coord_perms(members, channel, channel_name, ctx):
     ''' 
     Sets the permissions of the members by adding them to the coordination channel
@@ -1406,6 +1579,17 @@ async def war_info(ctx):
     except:
         await ctx.send("Something went wrong :( likely with the channel set up. Go grab Piggu.")
 
+@client.event
+async def on_member_update(before, after):
+    if len(before.roles) < len(after.roles):
+        # The user has gained a new role, so lets find out which one
+        newRole = next(role for role in after.roles if role not in before.roles)
+
+        if newRole.name == "Citizen" or newRole.name == "Trainee":
+            if after.id not in nation_dict:
+                res = requests.get(f'http://160.2.143.37:8080/discord/?key=davethsmellskrampuswhales&DiscordID={after.id}').json()[0]
+                warmembergsheet.append_row([res['leader'], int(res['_id']), str(after), int(after.id), 0])
+                update_dict()
 '''
 @client.command()
 async def table(ctx, type, *aaorsphere): 
