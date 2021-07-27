@@ -213,7 +213,7 @@ async def bulk_create(ctx, war_type = 2, api = 'pnw'):
                         wars.append(war)
                         nations_to_api.add(row[2])
                 id_string = ",".join(nations_to_api)
-                nations = requests.get(f'http://160.2.143.37:8080/nations/?key=davethsmellskrampuswhales&limit=50&_id={id_string}&sort_key=score&sort_dir=-1&project={{"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
+                nations = requests.get(f'http://159.118.147.210:8080/nations/?key=davethsmellskrampuswhales&limit=50&_id={id_string}&sort_key=score&sort_dir=-1&project={{"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
                 war_db = {}
                 for nation in nations:
                     war_db[nation['_id']] = nation
@@ -814,9 +814,9 @@ async def find_targets_old(ctx, member, target_alliance, ground_max_percent = 12
     update_dict()
     print(spheres.keys())
     if(target_alliance.replace('+',' ') in spheres):
-        nations = requests.get(f'http://160.2.143.37:8080/nations/?key=davethsmellskrampuswhales&limit=1000&alliance={",".join(spheres[target_alliance.replace("+"," ")])}&defensivewars={{"$ne":3}}&color={{"$ne":"beige"}}&sort_key=score&sort_dir=-1&project={{"name":1,"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
+        nations = requests.get(f'http://159.118.147.210:8080/nations/?key=davethsmellskrampuswhales&limit=1000&alliance={",".join(spheres[target_alliance.replace("+"," ")])}&defensivewars={{"$ne":3}}&color={{"$ne":"beige"}}&sort_key=score&sort_dir=-1&project={{"name":1,"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
     else:
-        nations = requests.get(f'http://160.2.143.37:8080/nations/?key=davethsmellskrampuswhales&limit=1000&alliance_name={target_alliance}&defensivewars={{"$ne":3}}&color={{"$ne":"beige"}}&sort_key=score&sort_dir=-1&project={{"name":1,"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
+        nations = requests.get(f'http://159.118.147.210:8080/nations/?key=davethsmellskrampuswhales&limit=1000&alliance_name={target_alliance}&defensivewars={{"$ne":3}}&color={{"$ne":"beige"}}&sort_key=score&sort_dir=-1&project={{"name":1,"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
     
     alliance_nations_in_range = [nation for nation in nations if (member_info['score'] * 0.75 <= nation['score'] <= member_info['score'] * 1.75 )]
 
@@ -1067,7 +1067,7 @@ async def find_counters_old(ctx, target, ground_max_percent = math.inf, ground_m
         return
 
     loading_msg = await ctx.send('Generating a list of potential members to counter...')
-    nations = requests.get(f'http://160.2.143.37:8080/nations/?key=davethsmellskrampuswhales&limit=500&alliance_name=carthago&offensivewars={{"$ne":5}}&sort_key=score&sort_dir=-1&project={{"name":1,"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
+    nations = requests.get(f'http://159.118.147.210:8080/nations/?key=davethsmellskrampuswhales&limit=500&alliance_name=carthago&offensivewars={{"$ne":5}}&sort_key=score&sort_dir=-1&project={{"name":1,"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
     alliance_nations_in_range = [nation for nation in nations if (target_info['score'] * (1/1.75) <= nation['score'] <= target_info['score'] * (1/0.75) )]
     counter_embed = discord.Embed(title= f"🎯 __Potential Counter for {target_info['leadername']} ({target_info['slots']}):__", 
         description = f'{target_info["leadername"]} has {target_info["soldiers"]} soldiers, {target_info["tanks"]} tanks, {target_info["aircraft"]} planes, and {target_info["ships"]} ships.')
@@ -1332,9 +1332,9 @@ async def find_combined(ctx, type, member, target_alliance, score_min, score_max
     try:
         if(target_alliance.replace('+',' ') in spheres):
             #160.2.143.37 is the real
-            nations = requests.get(f'http://160.2.143.37:8080/nations/?key=davethsmellskrampuswhales&limit=1000&alliance={",".join(spheres[target_alliance.replace("+"," ")])}&{slots}={{"$ne":{slot_num}}}&color={{"$ne":"beige"}}&sort_key=score&sort_dir=-1&project={{"name":1,"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
+            nations = requests.get(f'http://159.118.147.210:8080/nations/?key=davethsmellskrampuswhales&limit=1000&alliance={",".join(spheres[target_alliance.replace("+"," ")])}&{slots}={{"$ne":{slot_num}}}&color={{"$ne":"beige"}}&sort_key=score&sort_dir=-1&project={{"name":1,"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
         else:
-            nations = requests.get(f'http://160.2.143.37:8080/nations/?key=davethsmellskrampuswhales&limit=1000&alliance_name={target_alliance}&{slots}={{"$ne":{slot_num}}}&color={{"$ne":"beige"}}&sort_key=score&sort_dir=-1&project={{"name":1,"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
+            nations = requests.get(f'http://159.118.147.210:8080/nations/?key=davethsmellskrampuswhales&limit=1000&alliance_name={target_alliance}&{slots}={{"$ne":{slot_num}}}&color={{"$ne":"beige"}}&sort_key=score&sort_dir=-1&project={{"name":1,"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
     except (requests.exceptions.ConnectionError):
         ctx.send("Trouble connecting to Shama's API.... Piggy and Shama have been notified")
         #PnW API
@@ -1591,7 +1591,7 @@ async def on_member_update(before, after):
 
         if newRole.name == "Citizen" or newRole.name == "Trainee":
             if after.id not in nation_dict:
-                res = requests.get(f'http://160.2.143.37:8080/discord/?key=davethsmellskrampuswhales&DiscordID={after.id}').json()[0]
+                res = requests.get(f'http://159.118.147.210:8080/discord/?key=davethsmellskrampuswhales&DiscordID={after.id}').json()[0]
                 warmembergsheet.append_row([res['leader'], int(res['_id']), str(after), int(after.id), 0])
                 update_dict()
 '''
