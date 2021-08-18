@@ -48,9 +48,9 @@ client.remove_command('help')
 
 gaccount = gspread.service_account(filename = 'war pig-9478580af5de.json')
 
-gsheet = gaccount.open("Discord Tracking Sheet").sheet1
+#gsheet = gaccount.open("Discord Tracking Sheet").sheet1
 # make it [1:]
-member_names = gsheet.col_values(1)
+'''member_names = gsheet.col_values(1)
 member_names.pop(0)
 nation_id = gsheet.col_values(2)
 nation_id.pop(0)
@@ -60,15 +60,23 @@ nation_id = list(map(int, nation_id))
 dis_id = list(map(int, dis_id))
 member_dict = dict(zip(member_names, dis_id))
 nation_dict = dict(zip(dis_id, nation_id))  
-rev_nation_dict = dict(zip(nation_id, dis_id))
-
+rev_nation_dict = dict(zip(nation_id, dis_id))'''
+membership_db = requests.get('http://159.118.147.210:8080/discord/?key=davethsmellskrampuswhales&alliance=5049').json()
+member_names = [member['leader'] for member in membership_db]
+dis_id = [int(member['DiscordID']) for member in membership_db]
+nation_id = [int(member['_id']) for member in membership_db]
+member_dict = dict(zip(member_names, dis_id))
+nation_dict = dict(zip(dis_id, nation_id))
 
 wargsheet = gaccount.open("Carthago Milcom & Personnel").worksheet("Spheres")
 sphere_names = [sphere.lower() for sphere in wargsheet.col_values(1)[1:]]
 sphere_alliances = [sphere.split(',') for sphere in wargsheet.col_values(3)[1:]]
 spheres = dict(zip(sphere_names, sphere_alliances))
 
+print(spheres)
 warmembergsheet = gaccount.open("Carthago Milcom & Personnel").worksheet("Member Info")
+
+category_list = ['[CANNAE BUT COUNTER]', '[CANNAE BUT COUNTER 2]', '[BARRACKS]', '[BARRACKS 2]', '[BARRACKS 3]']
 '''member_names = ['Azrael','New Suleiman','Daveth','Locinii','Lothair of Acre','GrandmasterBee','Bmber',
 'Aaron Comneno','Asierith','Auto Von Bismarck','Ragnarok8085','Tamasith','Velium','Thibaud Brent',
 'Billy','Petko Vidmar','Roach','Al Sahina','Patro','Yuri B Molotov','Miyamoto Musashi',
@@ -105,15 +113,19 @@ async def on_ready():
 
 war_types = ["RAID", "ORDINARY", "ATTRITION"]
 @client.command()
-async def bulk_create(ctx, war_type = 2, api = 'pnw'):
+async def bulk_create(ctx, war_type: Optional[int] = 0, api: Optional[str] = "pnw"):
     '''
     Creates a list of channels based on csv target list
     '''
-    category = discord.utils.get(ctx.guild.categories, name = '[CANNAE BUT COUNTER]')
-    back_up_category = discord.utils.get(ctx.guild.categories, name = '[CANNAE BUT COUNTER 2]')
+    category_list_id = []
 
+    for category in category_list:
+        category_list_id.append(discord.utils.get(ctx.guild.categories, name = category))
+
+    print(category_list)
     #Sees if the user has permissions to manage channels in the category and access bot
-    if category.permissions_for(ctx.author).manage_channels:
+
+    if any(category.permissions_for(ctx.author).manage_channels for category in category_list_id):
         #for loop to get attachment
         for attachment in ctx.message.attachments:
             await attachment.save(f'csv/{attachment.filename}')
@@ -143,11 +155,12 @@ async def bulk_create(ctx, war_type = 2, api = 'pnw'):
 
                         #Creates the channel and edits the topic
                         channel = None
-                        
-                        try: 
-                            channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on {row[0]}')
-                        except discord.HTTPException:
-                            channel = await ctx.guild.create_text_channel(channel_name, category = back_up_category, topic = f'War on {row[0]}')
+                        for category in list(filter(None, category_list_id)):
+                            try: 
+                                channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on {row[0]}')
+                                break
+                            except:
+                                pass
 
                         war_embed = discord.Embed(title= f"⚔️ __Target: {' '.join(channel_name.split('-')[:-1])}__", 
                             description= f"Please declare {war_types[war_type]} war on {row[0]}", color=0xcb2400,
@@ -223,11 +236,12 @@ async def bulk_create(ctx, war_type = 2, api = 'pnw'):
                     mil_count = war_db[int(war['target_id'])]
                     #Creates the channel and edits the topic
                     channel = None
-                    
-                    try: 
-                        channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on https://politicsandwar.com/nation/id={war["target_id"]}')
-                    except discord.HTTPException:
-                        channel = await ctx.guild.create_text_channel(channel_name, category = back_up_category, topic = f'War on https://politicsandwar.com/nation/id={war["target_id"]}')
+                    for category in list(filter(None, category_list_id)):
+                        try: 
+                            channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on {row[0]}')
+                            break
+                        except:
+                            pass
 
                     war_embed = discord.Embed(title= f"⚔️ __Target: {' '.join(channel_name.split('-')[:-1])}__", 
                         description= f"Please declare {war_types[war_type]} war on https://politicsandwar.com/nation/id={war['target_id']}", color=0xcb2400,
@@ -324,22 +338,30 @@ async def create_chan(ctx, nation_link, war_type: Optional[int] = 0, reason: Opt
     :param reason: Reason (optional) for the war, you can leave it blank. "+" in place of spaces for reason.
     :param *members: Discord members to add to the channel
     '''
-    category = discord.utils.get(ctx.guild.categories, name = '[CANNAE BUT COUNTER]')
-    back_up_category = discord.utils.get(ctx.guild.categories, name = '[CANNAE BUT COUNTER 2]')
+    category_list_id = []
+
+    for category in category_list:
+        category_list_id.append(discord.utils.get(ctx.guild.categories, name = category))
+
+    print(category_list_id)
+    #Sees if the user has permissions to manage channels in the category and access bot
 
     #Checks if they have the permission to create these channels
-    if category.permissions_for(ctx.author).manage_channels:
+    if any(category.permissions_for(ctx.author).manage_channels for category in category_list_id):
 
         #Makes sure that the nation_link is in the right format
         if(re.search(r'politicsandwar.com/nation/id=\d{1,7}', nation_link)):
             channel_name = get_pnw_name(nation_link).replace(' ', '-') + '-' + nation_link.split('=')[1]
 
             channel = None
-            try:
-                channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on {nation_link}')
-            except discord.HTTPException:
-                channel = await ctx.guild.create_text_channel(channel_name, category = back_up_category, topic = f'War on {nation_link}')
-
+            for category in list(filter(None, category_list_id)):
+                print(category)
+                try: 
+                    channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on {nation_link}')
+                    print(channel)
+                    break
+                except:
+                    pass
             update_dict()
 
             #Checks to make sure it is a war reason and not a member
@@ -706,11 +728,12 @@ async def add(ctx, type, reason = None, *nations):
     :param nations: Nation link or ID of list of members to add
     ''' 
     reason = reason.replace('+', ' ')
-    reason = f'The war reason is: {reason}'
     #Clears the war reason if it doesn't exist and in place is a nation link/ID
     if re.search(r'\d{1,7}', reason):
         nations += (reason,)
         reason = ''
+    else:
+        reason = f'The war reason is: {reason}'
 
     #If members to be added are attackers
     if type == 'attacker' or type == 'attackers' or type == 'atker' or type == 'atkers' or type == 'atk' or type == 'atks' or type == 'attack' or type == 'attacks':
@@ -1486,21 +1509,26 @@ async def add_to_chan(ctx, nations):
     :param nations: List of nations to be added
     :returns: Discord ID of list of people to ping
     ''' 
-    update_dict()
     members = []
     #For loop that goes through every nation in nations to find them
     for nation in nations:
         #If it is a link
-        if(re.search(r'politicsandwar.com/nation/id=\d{1,7}', nation)) and int(nation.split('=')[1]) in rev_nation_dict:
-            member = ctx.guild.get_member(rev_nation_dict[int(nation.split('=')[1])])
+        if len(nation.split("=")) > 1:
+            nation_id = int(nation.split('=')[1])
+        else:
+            nation_id = int(nation)
+
+        dis_id = requests.get(f'http://159.118.147.210:8080/discord/?key=davethsmellskrampuswhales&_id={nation_id}').json()
+        if(re.search(r'politicsandwar.com/nation/id=\d{1,7}', nation)) and len(dis_id) > 0:
+            member = ctx.guild.get_member(int(dis_id[0]["DiscordID"]))
             await ctx.channel.set_permissions(member, read_messages=True, send_messages=True)
-            members.append(rev_nation_dict[int(nation.split('=')[1])])
+            members.append(int(dis_id[0]["DiscordID"]))
 
         #If it is an ID
-        elif(re.match(r'\d{1,7}', nation)) and int(nation) in rev_nation_dict:
-            member = ctx.guild.get_member(rev_nation_dict[int(nation)])
+        elif(re.match(r'\d{1,7}', nation)) and len(dis_id) > 0:
+            member = ctx.guild.get_member(int(dis_id[0]["DiscordID"]))
             await ctx.channel.set_permissions(member, read_messages=True, send_messages=True)
-            members.append(rev_nation_dict[int(nation)])
+            members.append(int(dis_id[0]["DiscordID"]))
             
         else:
             await ctx.send(f"Couldn't find member {nation}, either the member sheet is not updated or it is not a nation link/nation ID.")
@@ -1583,6 +1611,7 @@ async def war_info(ctx):
     except:
         await ctx.send("Something went wrong :( likely with the channel set up. Go grab Piggu.")
 
+#THIS NEEDS TO BE UPDATED
 @client.event
 async def on_member_update(before, after):
     if len(before.roles) < len(after.roles):
@@ -1683,7 +1712,18 @@ def member_list(leader_name):
 
     :returns: The Discord ID of the member
     '''
-    return member_dict.get(leader_name, '')
+
+    member_disc = member_dict.get(leader_name)
+    if member_disc != None:
+        return member_disc
+
+    else:
+        shama_db = requests.get(f'http://159.118.147.210:8080/discord/?key=davethsmellskrampuswhales&leader={leader_name.replace(" ", "+")}').json()
+        if len(shama_db) > 0:
+            nation_dict[int(shama_db[0]["DiscordID"])] = shama_db[0]["_id"]
+            return int(shama_db[0]["DiscordID"])
+        else:
+            return ""
 
 
 
@@ -1724,14 +1764,22 @@ def update_dict():
     global member_dict
     global nation_dict
     global spheres
+    '''
     member_names = gsheet.col_values(1)[1:]
     nation_id = [int(nation) for nation in gsheet.col_values(2)[1:]]
     dis_id = [int(disc) for disc in gsheet.col_values(4)[1:]]
     member_dict = dict(zip(member_names, dis_id))
+    nation_dict = dict(zip(dis_id, nation_id))'''
+
+    membership_db = requests.get('http://159.118.147.210:8080/discord/?key=davethsmellskrampuswhales&alliance=5049').json()
+    member_names = [member['leader'] for member in membership_db]
+    dis_id = [int(member['DiscordID']) for member in membership_db]
+    member_dict = dict(zip(member_names, dis_id))
     nation_dict = dict(zip(dis_id, nation_id))
+    '''
     sphere_names = [sphere.lower() for sphere in wargsheet.col_values(1)[1:]]
     sphere_alliances = [sphere.split(',') for sphere in wargsheet.col_values(3)[1:]]
-    spheres = dict(zip(sphere_names, sphere_alliances))    
+    spheres = dict(zip(sphere_names, sphere_alliances))'''
 
 
 
