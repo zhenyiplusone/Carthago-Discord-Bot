@@ -834,7 +834,7 @@ async def find_targets_old(ctx, member, target_alliance, ground_max_percent = 12
     '''
     target_alliance = target_alliance.lower()
     loading_msg = await ctx.send('Generating a list of potential targets...')
-    update_dict()
+    update_spheres()
     print(spheres.keys())
     if(target_alliance.replace('+',' ') in spheres):
         nations = requests.get(f'http://159.118.147.210:8080/nations/?key=davethsmellskrampuswhales&limit=1000&alliance={",".join(spheres[target_alliance.replace("+"," ")])}&defensivewars={{"$ne":3}}&color={{"$ne":"beige"}}&sort_key=score&sort_dir=-1&project={{"name":1,"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
@@ -1346,7 +1346,7 @@ async def find_combined(ctx, type, member, target_alliance, score_min, score_max
    
     target_alliance = target_alliance.lower()
     loading_msg = await ctx.send('Generating a list of potential targets...')
-    update_dict()
+    update_spheres()
     slots =  "defensivewars"
     slot_num = 3
     if type == "Counters":
@@ -1763,7 +1763,6 @@ def ann(df, value):
 def update_dict():
     global member_dict
     global nation_dict
-    global spheres
     '''
     member_names = gsheet.col_values(1)[1:]
     nation_id = [int(nation) for nation in gsheet.col_values(2)[1:]]
@@ -1776,10 +1775,12 @@ def update_dict():
     dis_id = [int(member['DiscordID']) for member in membership_db]
     member_dict = dict(zip(member_names, dis_id))
     nation_dict = dict(zip(dis_id, nation_id))
-    '''
+
+def update_spheres():
+    global spheres
     sphere_names = [sphere.lower() for sphere in wargsheet.col_values(1)[1:]]
     sphere_alliances = [sphere.split(',') for sphere in wargsheet.col_values(3)[1:]]
-    spheres = dict(zip(sphere_names, sphere_alliances))'''
+    spheres = dict(zip(sphere_names, sphere_alliances))
 
 
 
