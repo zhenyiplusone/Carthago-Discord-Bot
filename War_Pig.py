@@ -76,7 +76,7 @@ spheres = dict(zip(sphere_names, sphere_alliances))
 print(spheres)
 warmembergsheet = gaccount.open("Carthago Milcom & Personnel").worksheet("Member Info")
 
-category_list = ['[CANNAE BUT COUNTER]', '[CANNAE BUT COUNTER 2]', '[BARRACKS]', '[BARRACKS 2]', '[BARRACKS 3]']
+category_list = ['[CANNAE BUT COUNTER]', '[CANNAE BUT COUNTER 2]', '[CANNAE BUT COUNTER 3]', '[BARRACKS]', '[BARRACKS 2]', '[BARRACKS 3]']
 '''member_names = ['Azrael','New Suleiman','Daveth','Locinii','Lothair of Acre','GrandmasterBee','Bmber',
 'Aaron Comneno','Asierith','Auto Von Bismarck','Ragnarok8085','Tamasith','Velium','Thibaud Brent',
 'Billy','Petko Vidmar','Roach','Al Sahina','Patro','Yuri B Molotov','Miyamoto Musashi',
