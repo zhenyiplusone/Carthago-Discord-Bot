@@ -4,6 +4,8 @@ This script gets information from PnW API
 import requests
 import json
 
+api_key = '69e9cc72114cd2'
+
 def get_pnw_name(link):
     """
     Uses a link from PnW and gets the name of the nation
@@ -43,7 +45,6 @@ def req_info(link):
     :param link: is the nation link of the nation
     :returns: Json information from PnW nation
     """
-    api_key = '69e9cc72114cd2'
     nation_id = link.split('=')[1]
     return requests.get(f'https://politicsandwar.com/api/nation/id={nation_id}&key={api_key}').json()
 
@@ -82,7 +83,6 @@ def get_war_info(link):
     :returns: the amount of military in a dictionary
     '''
     for war in get_war_IDs(link):
-        api_key = '69e9cc72114cd2'
         req = requests.get(f'https://politicsandwar.com/api/war/{war}&key={api_key}').json()
         war_info = {"Aggressor": ID_info(req["war"][0]['aggressor_id'])['name'],
         "Aggressor Alliance": req["war"][0]['aggressor_alliance_name'],
@@ -103,7 +103,6 @@ def get_all_war_info(link, off):
     :param id: is the nation id
     :returns: the war info of that nation
     '''
-    api_key = '69e9cc72114cd2'
     if off:
         off_ID = req_info(link)['offensivewar_ids']
         for war in off_ID:
@@ -124,11 +123,9 @@ def ID_info(id):
     :param link: is nation ID
     :returns: nation information in json format
     '''
-    api_key = '69e9cc72114cd2'
     return requests.get(f'https://politicsandwar.com/api/nation/id={id}&key={api_key}').json()
 
 def alliance_nation_info(id):
-    api_key = '69e9cc72114cd2'
     return requests.get(f'https://politicsandwar.com/api/nation/id={id}&key={api_key}').json()
 if __name__ == '__main__':
     member_info = {'score': 2500.0}

@@ -122,7 +122,6 @@ async def bulk_create(ctx, war_type: Optional[int] = 0, api: Optional[str] = "pn
     for category in category_list:
         category_list_id.append(discord.utils.get(ctx.guild.categories, name = category))
 
-    print(category_list)
     #Sees if the user has permissions to manage channels in the category and access bot
 
     if any(category.permissions_for(ctx.author).manage_channels for category in category_list_id):
@@ -418,15 +417,19 @@ async def clear_expired(ctx):
     Deletes all the channels that have expired wars and have become usless
 
     '''
-    category = discord.utils.get(ctx.guild.categories, name = '[CANNAE BUT COUNTER]')
+    category_list_id = []
+
+    for category in category_list:
+        category_list_id.append(discord.utils.get(ctx.guild.categories, name = category))
 
     #Checks if they have the permission to create these channels
-    if category.permissions_for(ctx.author).manage_channels:
+    if any(category.permissions_for(ctx.author).manage_channels for category in category_list_id):
         #Runs for loop thru all the channels to find obsolete ones
-        for channel in category.channels:
-            active_war = False
-            topic = channel.topic
-            try:
+        for category in category_list_id:
+            for channel in category.channels:
+                active_war = False
+                topic = channel.topic
+                #try:
                 nation_link = topic.split()[2]
                 #Goes through a nation's wars and see if they still have wars with Carthago
                 for war in get_war_info(nation_link):
@@ -437,11 +440,11 @@ async def clear_expired(ctx):
                 if active_war == False:
                     await ctx.send(f'The war channel {channel.name} has been deleted.')
                     await channel.delete(reason="No existing Carthago wars with this nation")
-            except AttributeError:
-                await ctx.send(f"The war channel {channel.name} does not have a topic, thus we are unable to determine if war has been expired")
+                '''except AttributeError:
+                    await ctx.send(f"The war channel {channel.name} does not have a topic, thus we are unable to determine if war has been expired")
 
-            except: 
-                await ctx.send(f'Unexpected error has occured with {channel.name}, get piggy on it.')
+                except: 
+                    await ctx.send(f'Unexpected error has occured with {channel.name}, get piggy on it.')'''
     #Tells them if they don't have the permission to create the channel
     else:
         await ctx.send('You do not have permissions to create war channels')
