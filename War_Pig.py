@@ -558,7 +558,7 @@ async def war_info_full(ctx):
 
 @client.command()
 @commands.cooldown(1, 30, commands.BucketType.user)
-@commands.has_role(567389586934726677)
+@commands.has_any_role(567389586934726677, 712071416505172090)
 async def graph(ctx, type, *alliances): 
     '''
     Graphs specific information for alliances
@@ -754,7 +754,7 @@ async def add(ctx, type, reason = None, *nations):
 
 
 @client.command()
-@commands.has_role(567389586934726677)
+@commands.has_any_role(567389586934726677, 712071416505172090)
 async def find_targets_old(ctx, member, target_alliance, ground_max_percent = 120, ground_min_percent = 0, air_max_percent = 120, air_min_percent = 0): 
     ''' 
     Finds targets to attack in an enemy alliance for member
@@ -1032,18 +1032,18 @@ async def find_targets_old(ctx, member, target_alliance, ground_max_percent = 12
 
 #CURRENT TESTING GROUND
 @client.command()
-@commands.has_role(567389586934726677)
+@commands.has_any_role(567389586934726677, 712071416505172090)
 async def find_counters(ctx, target, ground_max_percent = math.inf, ground_min_percent = 80, air_max_percent = math.inf, air_min_percent = 80): 
     await find_combined(ctx, "Counters", target, "carthago", 1/1.75, 1/0.75, ground_max_percent, ground_min_percent, air_max_percent, air_min_percent)
 
 @client.command()
-@commands.has_role(567389586934726677)
+@commands.has_any_role(567389586934726677, 712071416505172090)
 async def find_targets(ctx, member, target_alliance, ground_max_percent = 120, ground_min_percent = 0, air_max_percent = 120, air_min_percent = 0): 
     await find_combined(ctx, "Targets", member, target_alliance, 0.75, 1.75, ground_max_percent, ground_min_percent, air_max_percent, air_min_percent)
 
 
 @client.command()
-@commands.has_role(567389586934726677)
+@commands.has_any_role(567389586934726677, 712071416505172090)
 async def find_counters_old(ctx, target, ground_max_percent = math.inf, ground_min_percent = 80, air_max_percent = math.inf, air_min_percent = 80): 
 
     ''' 
@@ -1530,7 +1530,7 @@ async def add_to_chan(ctx, nations):
     return members
 
 @client.command()
-@commands.has_role(567389586934726677)
+@commands.has_any_role(567389586934726677, 712071416505172090)
 async def help(ctx):
     help_embed = discord.Embed(title= f"📖 __List of Commands__", color=0xcb2400)
     help_embed.add_field(name = '!find_targets', value = f'Finds a list of targets in an alliance within range and military capabilities.\n Parameters\
