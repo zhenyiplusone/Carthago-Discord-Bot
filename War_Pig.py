@@ -47,7 +47,7 @@ intents.members = True
 client = commands.Bot(command_prefix = '!', intents=intents)
 client.remove_command('help')
 
-gaccount = gspread.service_account(filename = 'war pig-9478580af5de.json')
+gaccount = gspread.service_account(filename = 'google-credentials.json')
 
 #gsheet = gaccount.open("Discord Tracking Sheet").sheet1
 # make it [1:]
