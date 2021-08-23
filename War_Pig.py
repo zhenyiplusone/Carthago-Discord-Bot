@@ -1808,5 +1808,5 @@ async def graph_error(ctx, error):
         await ctx.send(f'The command is on cooldown for you, please try again in {error.retry_after:.3g} seconds')
 
 
-
-client.run('Mzk4MTk4ODQwNjA1NTQwMzUy.Xv6yug.fFWMqpyqJAYX0nFKYiBIsSEiUYk')
+token = os.environ.get('BOT_TOKEN')
+client.run(f'{token}')
