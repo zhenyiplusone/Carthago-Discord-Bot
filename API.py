@@ -3,8 +3,10 @@ This script gets information from PnW API
 """
 import requests
 import json
+import  os
 
 api_key = '69e9cc72114cd2'
+api_key = os.environ.get('PnWAPIKey')
 
 def get_pnw_name(link):
     """
