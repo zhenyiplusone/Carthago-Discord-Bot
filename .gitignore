@@ -1,0 +1,10 @@
+# Created by https://www.toptal.com/developers/gitignore/api/dotenv
+# Edit at https://www.toptal.com/developers/gitignore?templates=dotenv
+
+### dotenv ###
+.env
+
+### Google Service Worker ###
+*.json
+
+# End of https://www.toptal.com/developers/gitignore/api/dotenv
