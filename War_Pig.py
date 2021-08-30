@@ -9,6 +9,7 @@ with a CSV as input or create a single one.
     -Piggy
 '''
 
+#heroku local:run python war_pig.py
 import csv
 import re
 import discord
@@ -115,6 +116,7 @@ async def bulk_create(ctx, war_type: Optional[int] = 0, api: Optional[str] = "pn
         category_list_id.append(discord.utils.get(ctx.guild.categories, name = category))
 
     #Sees if the user has permissions to manage channels in the category and access bot
+    category_list_id = list(filter(None, category_list_id))
 
     if any(category.permissions_for(ctx.author).manage_channels for category in category_list_id):
         #for loop to get attachment
@@ -146,7 +148,7 @@ async def bulk_create(ctx, war_type: Optional[int] = 0, api: Optional[str] = "pn
 
                         #Creates the channel and edits the topic
                         channel = None
-                        for category in list(filter(None, category_list_id)):
+                        for category in category_list_id:
                             try: 
                                 channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on {row[0]}')
                                 break
@@ -334,7 +336,7 @@ async def create_chan(ctx, nation_link, war_type: Optional[int] = 0, reason: Opt
     for category in category_list:
         category_list_id.append(discord.utils.get(ctx.guild.categories, name = category))
 
-    print(category_list_id)
+    category_list_id = list(filter(None, category_list_id))
     #Sees if the user has permissions to manage channels in the category and access bot
 
     #Checks if they have the permission to create these channels
@@ -345,7 +347,7 @@ async def create_chan(ctx, nation_link, war_type: Optional[int] = 0, reason: Opt
             channel_name = get_pnw_name(nation_link).replace(' ', '-') + '-' + nation_link.split('=')[1]
 
             channel = None
-            for category in list(filter(None, category_list_id)):
+            for category in category_list_id:
                 print(category)
                 try: 
                     channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on {nation_link}')
@@ -413,6 +415,8 @@ async def clear_expired(ctx):
 
     for category in category_list:
         category_list_id.append(discord.utils.get(ctx.guild.categories, name = category))
+
+    category_list_id = list(filter(None, category_list_id))
 
     #Checks if they have the permission to create these channels
     if any(category.permissions_for(ctx.author).manage_channels for category in category_list_id):
@@ -722,35 +726,45 @@ async def add(ctx, type, reason = None, *nations):
     :param reason: The (optional) reason for war, you can leave this blank. Dashes "-" in place of spaces for reason.
     :param nations: Nation link or ID of list of members to add
     ''' 
-    reason = reason.replace('+', ' ')
-    #Clears the war reason if it doesn't exist and in place is a nation link/ID
-    if re.search(r'\d{1,7}', reason):
-        nations += (reason,)
-        reason = ''
+    category_list_id = []
+
+    for category in category_list:
+        category_list_id.append(discord.utils.get(ctx.guild.categories, name = category))
+
+    category_list_id = list(filter(None, category_list_id))
+
+    #Checks if they have the permission to create these channels
+    if any(category.permissions_for(ctx.author).manage_channels for category in category_list_id):
+        reason = reason.replace('+', ' ')
+        #Clears the war reason if it doesn't exist and in place is a nation link/ID
+        if re.search(r'\d{1,7}', reason):
+            nations += (reason,)
+            reason = ''
+        else:
+            reason = f'The war reason is: {reason}'
+
+        #If members to be added are attackers
+        if type == 'attacker' or type == 'attackers' or type == 'atker' or type == 'atkers' or type == 'atk' or type == 'atks' or type == 'attack' or type == 'attacks':
+            ping = await add_to_chan(ctx, nations)
+            #If you couldn't find any of the members there is no point to ping, so this check exists
+            if len(ping) != 0:
+                ping_list = ' '.join([f'<@{member}>' for member in ping])
+                await ctx.send(f'{ping_list} please read above and declare war on {ctx.channel.topic.split()[2]}. {reason}')
+
+        #If members to be added are defenders
+        elif type == 'defender' or type == 'defenders' or type == 'def' or type == 'defs' or type == 'defend' or type == 'defense':
+            ping = await add_to_chan(ctx, nations)
+            #If you couldn't find any of the members there is no point to ping, so this check exists
+            if len(ping) != 0:
+                ping_list = ' '.join([f'<@{member}>' for member in ping])
+                target = " ".join(ctx.channel.name.split('-')[:-1])
+                await ctx.send(f'{ping_list} is defending. Please coordinate with the other Carthago members here for the war against {target.title()}.')
+       
+        #If it is an invalid type of war
+        else:
+            await ctx.send('Invalid command format. Please do !add <atk/def> <nation link/id> <nation link/id> etc.')
     else:
-        reason = f'The war reason is: {reason}'
-
-    #If members to be added are attackers
-    if type == 'attacker' or type == 'attackers' or type == 'atker' or type == 'atkers' or type == 'atk' or type == 'atks' or type == 'attack' or type == 'attacks':
-        ping = await add_to_chan(ctx, nations)
-        #If you couldn't find any of the members there is no point to ping, so this check exists
-        if len(ping) != 0:
-            ping_list = ' '.join([f'<@{member}>' for member in ping])
-            await ctx.send(f'{ping_list} please read above and declare war on {ctx.channel.topic.split()[2]}. {reason}')
-
-    #If members to be added are defenders
-    elif type == 'defender' or type == 'defenders' or type == 'def' or type == 'defs' or type == 'defend' or type == 'defense':
-        ping = await add_to_chan(ctx, nations)
-        #If you couldn't find any of the members there is no point to ping, so this check exists
-        if len(ping) != 0:
-            ping_list = ' '.join([f'<@{member}>' for member in ping])
-            target = " ".join(ctx.channel.name.split('-')[:-1])
-            await ctx.send(f'{ping_list} is defending. Please coordinate with the other Carthago members here for the war against {target.title()}.')
-   
-    #If it is an invalid type of war
-    else:
-        await ctx.send('Invalid command format. Please do !add <atk/def> <nation link/id> <nation link/id> etc.')
-
+        await ctx.send("Shoo shoo no perms")
 
 
 @client.command()
@@ -1540,10 +1554,17 @@ async def help(ctx):
     help_embed.add_field(name = '!find_counters', value = f'Finds a list of targets in Carthago within range and military capabilities to counter.\n Parameters\
         are <target nation id or link> <ground max %> <ground min %> <air max %> <air min %> (default is infinity% max and 80% min, not neccessary to fill in)\
         \n__Example__: !find_counters 48730 150 90 170 80 finds all Carthago nations in range with 150-90% of my ground and 170-80% of my planes', inline = False)
-   
+    
+    category_list_id = []
+
     #Check if user has manage war chan perms aka are they milcom
-    category = discord.utils.get(ctx.guild.categories, name = '[CANNAE BUT COUNTER]')
-    if category.permissions_for(ctx.author).manage_channels:
+    for category in category_list:
+        category_list_id.append(discord.utils.get(ctx.guild.categories, name = category))
+
+    category_list_id = list(filter(None, category_list_id))
+    
+    #Checks if they have the permission to create these channels
+    if any(category.permissions_for(ctx.author).manage_channels for category in category_list_id):
         help_embed.add_field(name = '\u200b', value = '\u200b', inline = False)
         help_embed.add_field(name = '**__Milcom Specific Commands:__**', value = '\u200b', inline = False)
         help_embed.add_field(name = '!create_chan', value = f'Creates a channel for war.\n Parameters\
