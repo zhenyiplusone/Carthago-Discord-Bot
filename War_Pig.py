@@ -84,12 +84,9 @@ sphere_names = [sphere.lower() for sphere in wargsheet.col_values(1)[1:]]
 sphere_alliances = [sphere.split(',') for sphere in wargsheet.col_values(3)[1:]]
 spheres = dict(zip(sphere_names, sphere_alliances))
 
-print(spheres)
 warmembergsheet = gaccount.open("Carthago Milcom & Personnel").worksheet("Member Info")
 
 category_list = ['[CANNAE BUT COUNTER]', '[CANNAE BUT COUNTER 2]', '[CANNAE BUT COUNTER 3]', '[BARRACKS]', '[BARRACKS 2]', '[BARRACKS 3]']
-
-print(sham_api_key)
 
 # Getting the variables from Heroku
 
@@ -106,7 +103,7 @@ async def on_ready():
 
 war_types = ["RAID", "ORDINARY", "ATTRITION"]
 @client.command()
-async def bulk_create(ctx, war_type: Optional[int] = 0, api: Optional[str] = "pnw"):
+async def bulk_create(ctx, api: Optional[str] = "pnw", war_type: Optional[int] = 0):
     '''
     Creates a list of channels based on csv target list
     '''
@@ -150,6 +147,7 @@ async def bulk_create(ctx, war_type: Optional[int] = 0, api: Optional[str] = "pn
                         channel = None
                         for category in category_list_id:
                             try: 
+                                print(row[0])
                                 channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on {row[0]}')
                                 break
                             except:
@@ -230,8 +228,8 @@ async def bulk_create(ctx, war_type: Optional[int] = 0, api: Optional[str] = "pn
                     #Creates the channel and edits the topic
                     channel = None
                     for category in list(filter(None, category_list_id)):
-                        try: 
-                            channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on {row[0]}')
+                        try:                             
+                            channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on https://politicsandwar.com/nation/id={war["target_id"]}')
                             break
                         except:
                             pass
@@ -1489,7 +1487,7 @@ async def coord_perms(members, channel, channel_name, ctx):
     #Goes through every member in the list of members
     for member in members:
         #Only adds them if they're valid values
-        if member != '#ERROR!' and member != '' and member != '#VALUE!':
+        if member != '#ERROR!' and member != '' and member != '#VALUE!' and member != "Loading...":
             print(member)
             discord_name = member_list(member)
             print(ctx.guild.get_member(discord_name))
@@ -1795,6 +1793,7 @@ def update_dict():
 def update_spheres():
     global spheres
     sphere_names = [sphere.lower() for sphere in wargsheet.col_values(1)[1:]]
+    print(sphere_names)
     sphere_alliances = [sphere.split(',') for sphere in wargsheet.col_values(3)[1:]]
     spheres = dict(zip(sphere_names, sphere_alliances))
 
