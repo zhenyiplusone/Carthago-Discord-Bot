@@ -426,8 +426,9 @@ async def clear_expired(ctx):
                 #try:
                 nation_link = topic.split()[2]
                 #Goes through a nation's wars and see if they still have wars with Carthago
+                carth_and_nexus = ["Carthago", "House Stark", "Order of the White Rose"]
                 for war in get_war_info(nation_link):
-                    if war['Aggressor Alliance'] == 'Carthago' or war['Defender Alliance'] == 'Carthago':
+                    if war['Aggressor Alliance'] in carth_and_nexus or war['Defender Alliance'] in carth_and_nexus:
                         active_war = True
                         break
 
