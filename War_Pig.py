@@ -561,7 +561,7 @@ async def war_info_full(ctx):
 
 @client.command()
 @commands.cooldown(1, 30, commands.BucketType.user)
-@commands.has_any_role(567389586934726677, 712071416505172090)
+#@commands.has_any_role(567389586934726677, 712071416505172090)
 async def graph(ctx, type, *alliances): 
     '''
     Graphs specific information for alliances
@@ -693,6 +693,7 @@ async def graph(ctx, type, *alliances):
 
         await message.edit(content = f'Creating Graph')
         mil = pd.DataFrame(milplot_array[1:], range(len(milplot_array)-1), milplot_array[0])
+
         mil.to_excel('Excel_Sample.xlsx', sheet_name = 'Sheet1')
         df = pd.read_excel('Excel_Sample.xlsx', sheet_name = 'Sheet1')
         print(mil.head())
@@ -1285,6 +1286,90 @@ async def find_counters_old(ctx, target, ground_max_percent = math.inf, ground_m
     '''
 
     await find_counters_msg.clear_reactions()
+
+@client.command()
+async def sort_chans(ctx):
+    category_list_id = []
+
+    #Check if user has manage war chan perms aka are they milcom
+    for category in category_list:
+        category_list_id.append(discord.utils.get(ctx.guild.categories, name = category))
+
+    category_list_id = list(filter(None, category_list_id))
+    message = await ctx.send(f"Sorting channels now")
+
+    #Checks if they have the permission to create these channels
+    if any(category.permissions_for(ctx.author).manage_channels for category in category_list_id):
+        for category in category_list_id:
+            await message.edit(content= f"Sorting channels in {category.name}")
+            channels = category.channels
+            channels_copy = category.channels.copy()
+            start_pos = channels[0].position
+            await quick_sort(0, len(channels)-1, channels)
+            #for channel in channels:
+            print([channel.name for channel in channels])
+            for index, channel in enumerate(channels):
+                if(channel.name != category.channels[index].name):
+                    await channel.edit(position = start_pos)
+                start_pos += 1
+
+    await message.edit(content= f"Finished sorting")
+
+async def partition(start, end, array):
+      
+    # Initializing pivot's index to start
+    pivot_index = start 
+    pivot = array[pivot_index].name
+      
+    # This loop runs till start pointer crosses 
+    # end pointer, and when it does we swap the
+    # pivot with element on end pointer
+    while start < end:
+        # Increment the start pointer till it finds an 
+        # element greater than  pivot 
+        while start < len(array) and array[start].name <= pivot:
+            start += 1
+              
+        # Decrement the end pointer till it finds an 
+        # element less than pivot
+        while array[end].name > pivot:
+            end -= 1
+          
+        # If start and end have not crossed each other, 
+        # swap the numbers on start and end
+        if(start < end):
+            '''
+            start_pos = array[start].position
+            end_pos = array[end].position
+            await array[start].edit(position = end_pos)
+            await array[end].edit(position = start_pos)'''
+            array[start], array[end] = array[end], array[start]
+      
+    # Swap pivot element with element on end pointer.
+    # This puts pivot on its correct sorted place.
+    '''
+    end_pos = array[start].position
+    pivot_pos = array[pivot_index].position
+    await array[pivot_index].edit(position = end_pos)
+    await array[end].edit(position = pivot_pos)'''
+    
+    array[end], array[pivot_index] = array[pivot_index], array[end]
+     
+    # Returning end pointer to divide the array into 2
+    return end
+      
+# The main function that implements QuickSort 
+async def quick_sort(start, end, array):
+    if (start < end):
+          
+        # p is partitioning index, array[p] 
+        # is at right place
+        p = await partition(start, end, array)
+          
+        # Sort elements before partition 
+        # and after partition
+        await quick_sort(start, p - 1, array)
+        await quick_sort(p + 1, end, array)
 
 @client.command()
 async def piggy(ctx): 
