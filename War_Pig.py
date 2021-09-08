@@ -561,7 +561,7 @@ async def war_info_full(ctx):
 
 @client.command()
 @commands.cooldown(1, 30, commands.BucketType.user)
-#@commands.has_any_role(567389586934726677, 712071416505172090)
+@commands.has_any_role(567389586934726677, 712071416505172090)
 async def graph(ctx, type, *alliances): 
     '''
     Graphs specific information for alliances
@@ -1679,8 +1679,33 @@ async def help(ctx):
 async def war_info(ctx):
     try:
         nation_link = ctx.channel.topic.split()[2]
-        target_id = nation_link.split('=')[1]
-        nation_info = req_info(nation_link)
+        await war_info_combined(ctx, nation_link)
+    except:
+        await ctx.send("Something went wrong :( likely with the channel set up. Go grab Piggu.")
+
+@client.command()
+#@commands.has_any_role(567389586934726677, 712071416505172090)
+@commands.cooldown(1, 30, commands.BucketType.channel)
+async def member_war_info(ctx, member):
+    if(re.search(r'politicsandwar.com/nation/id=\d{1,7}', member)):
+        await war_info_combined(ctx, member)
+
+    elif(re.search(r'<@!\d{16,19}>', member)):
+        try:
+            disc_id = member.split('<@!')[1].split('>')[0]
+            print(disc_id)
+            nation_id = requests.get(f'http://{sham_ip}:8080/discord/?key={sham_api_key}&DiscordID={disc_id}').json()[0]['_id']
+            await war_info_combined(ctx, f'politicsandwar.com/nation/id={nation_id}')
+        except:
+            await ctx.send("Could not find member in database")
+    elif(re.search(r'\d{1,7}', member)):
+        await war_info_combined(ctx, f'politicsandwar.com/nation/id={member}')
+    else:
+        await ctx.send("Invalid link/ID")
+
+async def war_info_combined(ctx, nation_link):
+    nation_info = req_info(nation_link)
+    if('error' not in nation_info):
         war_info_embed = discord.Embed(title= f"{nation_info['name']} ({nation_info['cities']}) [{nation_info['alliance']}] ", color=0x6AA84F)
         war_info_embed.add_field(name = 'War Info', value = f"The target has {nation_info['soldiers']} soldiers, {nation_info['tanks']} tanks, {nation_info['aircraft']} aircraft, and {nation_info['ships']} ships", inline = False)
 
@@ -1707,9 +1732,8 @@ async def war_info(ctx):
 
         await ctx.send(embed = off_embed)
         await ctx.send(embed = def_embed)
-
-    except:
-        await ctx.send("Something went wrong :( likely with the channel set up. Go grab Piggu.")
+    else:
+        await ctx.send("Invalid link/ID")
 
 #THIS NEEDS TO BE UPDATED
 @client.event
@@ -1905,6 +1929,11 @@ async def create_chan_error(ctx, error):
 #If the command is on cooldown
 @war_info.error
 async def war_info_error(ctx, error):
+    if isinstance(error, commands.CommandOnCooldown):
+        await ctx.send(f'The command is on cooldown for this channel, please try again in {error.retry_after:.3g} seconds')
+
+@member_war_info.error
+async def member_war_info_error(ctx, error):
     if isinstance(error, commands.CommandOnCooldown):
         await ctx.send(f'The command is on cooldown for this channel, please try again in {error.retry_after:.3g} seconds')
 
