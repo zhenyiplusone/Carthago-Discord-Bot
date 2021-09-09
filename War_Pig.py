@@ -1684,9 +1684,9 @@ async def war_info(ctx):
         await ctx.send("Something went wrong :( likely with the channel set up. Go grab Piggu.")
 
 @client.command()
-#@commands.has_any_role(567389586934726677, 712071416505172090)
+@commands.has_any_role(567389586934726677, 712071416505172090)
 @commands.cooldown(1, 30, commands.BucketType.channel)
-async def member_war_info(ctx, member):
+async def wars(ctx, member):
     if(re.search(r'politicsandwar.com/nation/id=\d{1,7}', member)):
         await war_info_combined(ctx, member)
 
@@ -1932,8 +1932,8 @@ async def war_info_error(ctx, error):
     if isinstance(error, commands.CommandOnCooldown):
         await ctx.send(f'The command is on cooldown for this channel, please try again in {error.retry_after:.3g} seconds')
 
-@member_war_info.error
-async def member_war_info_error(ctx, error):
+@wars.error
+async def wars(ctx, error):
     if isinstance(error, commands.CommandOnCooldown):
         await ctx.send(f'The command is on cooldown for this channel, please try again in {error.retry_after:.3g} seconds')
 
