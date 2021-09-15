@@ -1690,10 +1690,9 @@ async def wars(ctx, member):
     if(re.search(r'politicsandwar.com/nation/id=\d{1,7}', member)):
         await war_info_combined(ctx, member)
 
-    elif(re.search(r'<@!\d{16,19}>', member)):
+    elif(re.search(r'<@\d{16,19}>', member) or re.search(r'<@!\d{16,19}>', member)):
         try:
-            disc_id = member.split('<@!')[1].split('>')[0]
-            print(disc_id)
+            disc_id = re.sub("[^0-9]", "", member)
             nation_id = requests.get(f'http://{sham_ip}:8080/discord/?key={sham_api_key}&DiscordID={disc_id}').json()[0]['_id']
             await war_info_combined(ctx, f'politicsandwar.com/nation/id={nation_id}')
         except:
