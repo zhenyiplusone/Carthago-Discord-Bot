@@ -357,7 +357,7 @@ async def create_chan(ctx, nation_link, war_type: Optional[int] = 0, reason: Opt
 
             #Checks to make sure it is a war reason and not a member
             
-            if re.match(r'<@!\d{18}\>', reason):
+            if re.match(r'<@\d{18}\>', reason) or re.match(r'<@!\d{18}\>', reason):
                 id = int(reason.split('!')[1].split('>')[0])
                 members += (client.get_user(id),)
                 reason = ''
