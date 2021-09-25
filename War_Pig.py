@@ -1923,7 +1923,7 @@ async def create_chan_error(ctx, error):
         await ctx.send('Missing required argument, the correct format is:\
             !create_chan [nation_link] @member @member ... etc')
     else:
-        await ctx.send(error)
+        await ctx.send("API error")
 
 #If the command is on cooldown
 @war_info.error
