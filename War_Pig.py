@@ -84,7 +84,7 @@ sphere_names = [sphere.lower() for sphere in wargsheet.col_values(1)[1:]]
 sphere_alliances = [sphere.split(',') for sphere in wargsheet.col_values(3)[1:]]
 spheres = dict(zip(sphere_names, sphere_alliances))
 
-warmembergsheet = gaccount.open("Carthago Milcom & Personnel").worksheet("Member Info")
+warmembergsheet = gaccount.open("Carthago Milcom & Personnel").worksheet("Members")
 
 category_list = ['[CANNAE BUT COUNTER]', '[CANNAE BUT COUNTER 2]', '[CANNAE BUT COUNTER 3]', '[BARRACKS]', '[BARRACKS 2]', '[BARRACKS 3]']
 
