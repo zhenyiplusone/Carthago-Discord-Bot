@@ -128,6 +128,11 @@ def ID_info(id):
 
 def alliance_nation_info(id):
     return requests.get(f'https://politicsandwar.com/api/nation/id={id}&key={api_key}').json()
+
+
+def alliance_war_list(alliance_id):
+    return requests.get(f'https://politicsandwar.com/api/wars/200&alliance_id={alliance_id}&key={api_key}').json()
+
 if __name__ == '__main__':
     member_info = {'score': 2500.0}
     nations = requests.get(f'http://160.2.143.37:8080/nations/?key=davethsmellskrampuswhales&limit=50&alliance_name=carthago&defensivewars={{"$ne":3}}&color={{"$ne":"beige"}}&sort_key=score&sort_dir=-1&project={{"name":1,"score":1,"solders":1,"tanks":1,"aircraft":1,"ships":1}}').json()

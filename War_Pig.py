@@ -37,6 +37,7 @@ from API import get_leader
 from API import get_cities
 from API import req_info
 from API import ID_info
+from API import alliance_war_list
 from openpyxl import load_workbook
 from typing import Optional
 import os
@@ -342,57 +343,60 @@ async def create_chan(ctx, nation_link, war_type: Optional[int] = 0, reason: Opt
 
         #Makes sure that the nation_link is in the right format
         if(re.search(r'politicsandwar.com/nation/id=\d{1,7}', nation_link)):
-            channel_name = get_pnw_name(nation_link).replace(' ', '-') + '-' + nation_link.split('=')[1]
+            chan_nation_ids = await get_curr_chan_list(ctx, category_list_id)
+            if((curr_chan := search_chan_list(chan_nation_ids, nation_link.split('=')[1])) == None):
+                channel_name = get_pnw_name(nation_link).replace(' ', '-') + '-' + nation_link.split('=')[1]
 
-            channel = None
-            for category in category_list_id:
-                print(category)
-                try: 
-                    channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on {nation_link}')
-                    print(channel)
-                    break
-                except:
-                    pass
-            update_dict()
+                channel = None
+                for category in category_list_id:
+                    print(category)
+                    try: 
+                        channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on {nation_link}')
+                        print(channel)
+                        break
+                    except:
+                        pass
+                update_dict()
 
-            #Checks to make sure it is a war reason and not a member
-            
-            if re.match(r'<@\d{18}\>', reason) or re.match(r'<@!\d{18}\>', reason):
-                id = int(reason.split('!')[1].split('>')[0])
-                members += (client.get_user(id),)
-                reason = ''
-            #For loop to set permissions for members
-            ping = ''
-            for member in members:
-                await channel.set_permissions(member, read_messages=True, send_messages=True)
-                ping = ping + f'<@{member.id}> '
-            
-            #If it is a valid war reason, replace + with spaces
-            if reason != '':
-                reason = reason.replace('+', ' ')
-                reason = f', war reason: {reason}'
-  
-            war_embed = discord.Embed(title= f"⚔️ __Target: {' '.join(channel_name.split('-')[:-1])}__", 
-                description= f"Please declare {war_types[war_type]} war on on {nation_link}{reason}", color=0xcb2400,
-                url = f'https://politicsandwar.com/nation/war/declare/id={nation_link.split("=")[1]}')
+                #Checks to make sure it is a war reason and not a member
+                
+                if re.match(r'<@\d{18}\>', reason) or re.match(r'<@!\d{18}\>', reason):
+                    id = int(reason.split('!')[1].split('>')[0])
+                    members += (client.get_user(id),)
+                    reason = ''
+                #For loop to set permissions for members
+                ping = ''
+                for member in members:
+                    await channel.set_permissions(member, read_messages=True, send_messages=True)
+                    ping = ping + f'<@{member.id}> '
+                
+                #If it is a valid war reason, replace + with spaces
+                if reason != '':
+                    reason = reason.replace('+', ' ')
+                    reason = f', war reason: {reason}'
+      
+                war_embed = discord.Embed(title= f"⚔️ __Target: {' '.join(channel_name.split('-')[:-1])}__", 
+                    description= f"Please declare {war_types[war_type]} war on on {nation_link}{reason}", color=0xcb2400,
+                    url = f'https://politicsandwar.com/nation/war/declare/id={nation_link.split("=")[1]}')
 
 
-            mil_count = get_pnw_mil(f'https://politicsandwar.com/nation/id={nation_link.split("=")[1]}')
+                mil_count = get_pnw_mil(f'https://politicsandwar.com/nation/id={nation_link.split("=")[1]}')
 
-            war_embed.add_field(name = '__Military Information:__', value = f'{channel_name.split("-")[0]} has {mil_count["Soldiers"]} soldiers, {mil_count["Tanks"]} tanks, {mil_count["Planes"]} planes, and {mil_count["Ships"]} ships', inline = False)
+                war_embed.add_field(name = '__Military Information:__', value = f'{channel_name.split("-")[0]} has {mil_count["Soldiers"]} soldiers, {mil_count["Tanks"]} tanks, {mil_count["Planes"]} planes, and {mil_count["Ships"]} ships', inline = False)
 
-            for index, member in enumerate(members): 
-                link = f'https://politicsandwar.com/nation/id={nation_dict.get(member.id, "N/A")}'
-                war_embed.add_field(name= f"__Attacker {index + 1}:__", value=f"[{member.display_name}]({link})", inline=True)
-           
-            war_embed.add_field(name="__Reminder__", value="1.) Make sure you have enough resources including food and uranium, ping gov if you need more\
-                    \n 2.) Look over their military before going in and plan out the best move\
-                    \n 3.) Talk and coordinate with fellow members, declare at the same time and help each other\
-                    \n 4.) Again, start with a dogfight against their aircraft, then assassinate their spies and post results in <#639621955795812362>\
-                    \n Good luck!", inline=False)
+                for index, member in enumerate(members): 
+                    link = f'https://politicsandwar.com/nation/id={nation_dict.get(member.id, "N/A")}'
+                    war_embed.add_field(name= f"__Attacker {index + 1}:__", value=f"[{member.display_name}]({link})", inline=True)
+               
+                war_embed.add_field(name="__Reminder__", value="1.) Make sure you have enough resources including food and uranium, ping gov if you need more\
+                        \n 2.) Look over their military before going in and plan out the best move\
+                        \n 3.) Talk and coordinate with fellow members, declare at the same time and help each other\
+                        \n 4.) Again, start with a dogfight against their aircraft, then assassinate their spies and post results in <#639621955795812362>\
+                        \n Good luck!", inline=False)
 
-            await channel.send(f'{ping}',embed = war_embed)
-
+                await channel.send(f'{ping}',embed = war_embed)
+            else:
+                await ctx.send(f'A war channel for this nation already exists: <#{curr_chan}>')
         #Lets user know that nation_link is in wring format
         else:
             await ctx.send('Nation link format is wrong, must be politicsandwar.com/nation/id=xxxxx')
@@ -1575,7 +1579,7 @@ async def coord_perms(members, channel, channel_name, ctx):
         #Only adds them if they're valid values
         if member != '#ERROR!' and member != '' and member != '#VALUE!' and member != "Loading...":
             print(member)
-            discord_name = member_list(member)
+            discord_name = member_list_leader(member)
             print(ctx.guild.get_member(discord_name))
             #Makes sure that it adds valid users
             if discord_name != '':
@@ -1829,7 +1833,7 @@ async def find_members(ctx):
 
 
 
-def member_list(leader_name):
+def member_list_leader(leader_name):
     '''
     Find the discord ID of the member given their leader name
 
@@ -1848,7 +1852,24 @@ def member_list(leader_name):
         else:
             return ""
 
+def member_list_id(nation_id):
+    '''
+    Find the discord ID of the member given their leader name
 
+    :returns: The Discord ID of the member
+    '''
+
+    member_disc = member_dict.get(leader_name)
+    if member_disc != None:
+        return member_disc
+
+    else:
+        shama_db = requests.get(f'http://{sham_ip}:8080/discord/?key={sham_api_key}&_id={nation_id}').json()
+        if len(shama_db) > 0:
+            nation_dict[int(shama_db[0]["DiscordID"])] = shama_db[0]["_id"]
+            return int(shama_db[0]["DiscordID"])
+        else:
+            return ""
 
 
 
@@ -1906,8 +1927,122 @@ def update_spheres():
     sphere_alliances = [sphere.split(',') for sphere in wargsheet.col_values(3)[1:]]
     spheres = dict(zip(sphere_names, sphere_alliances))
 
+@client.command()
+async def bulk_update(ctx, nexus: Optional[str] = "carth"):
+    category_list_id = []
+    alliance_id = "5049"
+    if nexus.lower() == "nexus":
+        alliance_id = "5049,2510,3683"
+
+    #Check if user has manage war chan perms aka are they milcom
+    for category in category_list:
+        category_list_id.append(discord.utils.get(ctx.guild.categories, name = category))
+
+    category_list_id = list(filter(None, category_list_id))
+
+    #Checks if they have the permission to create these channels
+    if any(category.permissions_for(ctx.author).manage_channels for category in category_list_id):
+        #API stuff here searching for the wars
+        #NEXUS AND NON NEXUS
+        war_json = alliance_war_list(alliance_id)
+        curr_chan_list = await get_curr_chan_list(ctx, category_list_id)
+        if war_json['success']:
+            war_list = war_json['wars']
+            carth_and_nexus = ["Carthago", "House Stark", "Order of the White Rose"]
+            war_list_db = pd.DataFrame(war_list)
+            active_wars = war_list_db.loc[(war_list_db["status"] == "Active") | (war_list_db["status"] == 'Defender Offered Peace') | (war_list_db["status"] == 'Attacker Offered Peace')]
+            defensive_wars = active_wars.loc[active_wars["defenderAA"].isin(carth_and_nexus)]
+            offensive_wars = active_wars.loc[~active_wars["defenderAA"].isin(carth_and_nexus)]
+            for index, war in defensive_wars.iterrows():
+                #SHOULD ONLY CREATE FOR DEFENSIVE WARS, UPDATE WITTH ATTACKERS THO?
+            
+                nation_id = str(war["attackerID"])
+                # this needs to be more efficient so it is called only once here
+                if((curr_chan_id := search_chan_list(curr_chan_list, nation_id)) != None):
+                    curr_chan_list[nation_id] = curr_chan_id
+                   
+                else:
+                    nation_info = requests.get(f'http://{sham_ip}:8080/nations/?key={sham_api_key}&limit=1&_id={nation_id}&sort_key=score&sort_dir=-1&project={{"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
+                    if len(nation_info) > 0:
+                        mil_count = nation_info[0]
+                        #creates the channel
+                        channel_name = get_pnw_name(f"politicsandwar.com/nation/id={nation_id}").replace(' ', '-') + '-' + nation_id
+                        channel = None
+                    
+                        for category in category_list_id:
+                            try: 
+                                channel = await ctx.guild.create_text_channel(channel_name, category = category, topic = f'War on https://politicsandwar.com/nation/id={nation_id}')
+                                print(channel)
+                                break
+                            except:
+                                pass
+                        update_dict()
+
+                        war_embed = discord.Embed(title= f"⚔️ __Target: {' '.join(channel_name.split('-')[:-1])}__", 
+                            description= f"Please declare war on https://politicsandwar.com/nation/id={nation_id}", color=0xcb2400,
+                            url = f'https://politicsandwar.com/nation/war/declare/id={nation_id}')
 
 
+                        war_embed.add_field(name = '__Military Information:__', value = f'{channel_name.split("-")[0]} has {mil_count["soldiers"]} soldiers, {mil_count["tanks"]} tanks, {mil_count["aircraft"]} planes, and {mil_count["ships"]} ships', inline = False)
+
+                        war_embed.add_field(name="__Reminder__", value="1.) Make sure you have enough resources including food and uranium, ping gov if you need more\
+                                \n 2.) Look over their military before going in and plan out the best move\
+                                \n 3.) Talk and coordinate with fellow members, declare at the same time and help each other\
+                                \n 4.) Again, start with a dogfight against their aircraft, then assassinate their spies and post results in <#639621955795812362>\
+                                \n Good luck!", inline=False)
+
+                        await channel.send(f'',embed = war_embed)
+                        curr_chan_list[nation_id] = channel.id 
+                        curr_chan_id = channel.id 
+                    else:
+                        ctx.send(f"ERROR: Unable to get nation information from DB for {nation_id}")
+
+                members_attacking = offensive_wars.loc[offensive_wars["defenderID"] == war["attackerID"]]["attackerID"].tolist()
+                members_id = ",".join(str(v) for v in members_attacking) + f',{war["defenderID"]}'
+                # GET ATTACKERS AND REMOVE FROM PANDAS DB
+                # a way to check if they're in the channel already or not
+                # model after coord_perms(members, channel, channel_name, ctx)
+                channel = ctx.guild.get_channel(curr_chan_id)
+                shama_db = requests.get(f'http://{sham_ip}:8080/discord/?key={sham_api_key}&_id={members_id}').json()
+                for index, member_data in enumerate(shama_db):
+                    member = ctx.guild.get_member(int(member_data["DiscordID"]))
+                    if(member):
+                        if(not channel.permissions_for(member).read_messages):
+                            await channel.set_permissions(member, read_messages=True, send_messages=True)
+                            target = " ".join(channel.name.split('-')[:-1])
+                            # TO CHANGE THIS SO IT ACCOUNTS FOR ATTACKER AND DEFENDER DIFFERENT MESSAGES
+                            if index == len(shama_db) - 1:
+                                await channel.send(f"{member_data['DiscordID']} is **defending**. Please coordinate with the other Carthago members here for the war against {target.title()}.")
+                            else:
+                                await channel.send(f"{member_data['DiscordID']} is **attacking**. Please coordinate with Carthago defenders here for the war against {target.title()}.")
+                    else:
+                        await ctx.send(f"{member_data['leader']} ({member_data['_id']}) is not in the server and can not be added to <#{curr_chan_id}>")
+                
+                offensive_wars = offensive_wars.loc[offensive_wars["defenderID"] != war["attackerID"]]
+        else:
+            await ctx.send("ERROR: failed to request PnW API, thanks Sheepy!")
+
+
+async def get_curr_chan_list(ctx, category_list_id):
+
+    chan_nation_ids = {}
+    #Loops through every one of the category
+    for category in category_list_id:
+        channels = category.channels
+        #Loops through every channel in the category
+        for chan in channels:
+            chan_nation_id = chan.name.split("-")[-1]
+            chan_nation_ids[chan_nation_id] = chan.id
+    return chan_nation_ids
+
+def search_chan_list(chan_nation_ids, nation_id):
+    if nation_id in chan_nation_ids:
+        return chan_nation_ids[nation_id]
+    else:
+        # transfer this to bulk create
+        # creates the channel
+
+        return None
 
 
 @create_chan.error
