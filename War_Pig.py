@@ -1928,6 +1928,28 @@ def update_spheres():
     spheres = dict(zip(sphere_names, sphere_alliances))
 
 @client.command()
+async def bulk_info(ctx):
+    category_list_id = []
+    message = await ctx.send("Running !war_info")
+    for category in category_list:
+        category_list_id.append(discord.utils.get(ctx.guild.categories, name = category))
+
+    category_list_id = list(filter(None, category_list_id))
+    if any(category.permissions_for(ctx.author).manage_channels for category in category_list_id):
+        for category in category_list_id:
+            channels = category.channels
+            #Loops through every channel in the category
+            for chan in channels:
+                await message.edit(content = f'Running !war_info on <#{chan.id}>')
+                try:
+                    nation_link = chan.topic.split()[2]
+                    await war_info_combined(chan, nation_link)
+                except:
+                    await ctx.send(f"Unable to run !war_info on <#{chan.id}>. Check the channel set up.")
+                
+        await message.edit(content = f'Finished running !war_info on all channels')
+
+@client.command()
 async def bulk_update(ctx, nexus: Optional[str] = "carth"):
     category_list_id = []
     alliance_id = "5049"
