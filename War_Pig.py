@@ -2041,6 +2041,7 @@ async def bulk_update(ctx, nexus: Optional[str] = "carth"):
                         await ctx.send(f"{member_data['leader']} ({member_data['_id']}) is not in the server and can not be added to <#{curr_chan_id}>")
                 
                 offensive_wars = offensive_wars.loc[offensive_wars["defenderID"] != war["attackerID"]]
+            await ctx.send("Defensive war channels are all up to date")
         else:
             await ctx.send("ERROR: failed to request PnW API, thanks Sheepy!")
 
