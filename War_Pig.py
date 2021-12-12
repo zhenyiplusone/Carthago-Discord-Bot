@@ -1444,10 +1444,10 @@ async def find_combined(ctx, type, member, target_alliance, score_min, score_max
     target_alliance = target_alliance.lower()
     loading_msg = await ctx.send('Generating a list of potential targets...')
     update_spheres()
-    slots =  "defensivewars"
+    slots =  "defensive_wars"
     slot_num = 3
     if type == "Counters":
-        slots = "offensivewars"
+        slots = "offensive_wars"
         slot_num = 5
     try:
         if(target_alliance.replace('+',' ') in spheres):
