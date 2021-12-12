@@ -2034,9 +2034,9 @@ async def bulk_update(ctx, nexus: Optional[str] = "carth"):
                             target = " ".join(channel.name.split('-')[:-1])
                             # TO CHANGE THIS SO IT ACCOUNTS FOR ATTACKER AND DEFENDER DIFFERENT MESSAGES
                             if index == len(shama_db) - 1:
-                                await channel.send(f"{member_data['DiscordID']} is **defending**. Please coordinate with the other Carthago members here for the war against {target.title()}.")
+                                await channel.send(f"<@{member_data['DiscordID']}> is **defending**. Please coordinate with the other Carthago members here for the war against {target.title()}.")
                             else:
-                                await channel.send(f"{member_data['DiscordID']} is **attacking**. Please coordinate with Carthago defenders here for the war against {target.title()}.")
+                                await channel.send(f"<@{member_data['DiscordID']}> is **attacking**. Please coordinate with Carthago defenders here for the war against {target.title()}.")
                     else:
                         await ctx.send(f"{member_data['leader']} ({member_data['_id']}) is not in the server and can not be added to <#{curr_chan_id}>")
                 
