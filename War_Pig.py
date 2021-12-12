@@ -2033,7 +2033,7 @@ async def bulk_update(ctx, nexus: Optional[str] = "carth"):
                             await channel.set_permissions(member, read_messages=True, send_messages=True)
                             target = " ".join(channel.name.split('-')[:-1])
                             # TO CHANGE THIS SO IT ACCOUNTS FOR ATTACKER AND DEFENDER DIFFERENT MESSAGES
-                            if member_data["_ID"] == war["defenderID"]:
+                            if member_data["_id"] == war["defenderID"]:
                                 await channel.send(f"<@{member_data['DiscordID']}> is **defending**. Please coordinate with the other Carthago members here for the war against {target.title()}.")
                             else:
                                 await channel.send(f"<@{member_data['DiscordID']}> is **attacking**. Please coordinate with Carthago defenders here for the war against {target.title()}.")
