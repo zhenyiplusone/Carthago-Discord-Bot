@@ -1452,9 +1452,9 @@ async def find_combined(ctx, type, member, target_alliance, score_min, score_max
     try:
         if(target_alliance.replace('+',' ') in spheres):
             #160.2.143.37 is the real
-            nations = requests.get(f'http://{sham_ip}:8080/nations/?key={sham_api_key}&limit=1000&alliance={",".join(spheres[target_alliance.replace("+"," ")])}&{slots}={{"$ne":{slot_num}}}&color={{"$ne":"beige"}}&sort_key=score&sort_dir=-1&project={{"name":1,"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
+            nations = requests.get(f'http://{sham_ip}:8080/nations/?key={sham_api_key}&limit=1000&alliance={",".join(spheres[target_alliance.replace("+"," ")])}&{slots}={{"$ne":{slot_num}}}&color={{"$ne":"beige"}}&vm_turns=0&sort_key=score&sort_dir=-1&project={{"name":1,"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
         else:
-            nations = requests.get(f'http://{sham_ip}:8080/nations/?key={sham_api_key}&limit=1000&alliance_name={target_alliance}&{slots}={{"$ne":{slot_num}}}&color={{"$ne":"beige"}}&sort_key=score&sort_dir=-1&project={{"name":1,"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
+            nations = requests.get(f'http://{sham_ip}:8080/nations/?key={sham_api_key}&limit=1000&alliance_name={target_alliance}&{slots}={{"$ne":{slot_num}}}&color={{"$ne":"beige"}}&vm_turns=0&sort_key=score&sort_dir=-1&project={{"name":1,"cities":1,"score":1,"soldiers":1,"tanks":1,"aircraft":1,"ships":1}}').json()
     except (requests.exceptions.ConnectionError):
         ctx.send("Trouble connecting to Shama's API.... Piggy and Shama have been notified")
         #PnW API
