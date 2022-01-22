@@ -181,7 +181,7 @@ async def bulk_create(ctx, api: Optional[str] = "pnw", war_type: Optional[int] =
                             user = client.get_user(member)
                             war_embed.add_field(name= f"__Defender {index + 1}:__", value=f"[{user.display_name}]({link})", inline=True)
                             try:
-                                await user.send(content = f"Carthago is under siege! You've been attacked. Please check <#{channel.id}> to coordinate with your peers. Thank you!")
+                                await user.send(content = f"We are under siege! You've been attacked. Please check <#{channel.id}> to coordinate with your peers. Thank you!")
                             except: 
                                 await ctx.send(f'Could not DM {user.name} because they have disabled DMs with bots, please message them manually.')
                         
@@ -260,7 +260,7 @@ async def bulk_create(ctx, api: Optional[str] = "pnw", war_type: Optional[int] =
                         user = client.get_user(member)
                         war_embed.add_field(name= f"__Defender {index + 1}:__", value=f"[{user.display_name}]({link})", inline=True)
                         try:
-                            await user.send(content = f"Carthago is under siege! You've been attacked. Please check <#{channel.id}> to coordinate with your peers. Thank you!")
+                            await user.send(content = f"We are under siege! You've been attacked. Please check <#{channel.id}> to coordinate with your peers. Thank you!")
                         except: 
                             await ctx.send(f'Could not DM {user.name} because they have disabled DMs with bots, please message them manually.')
                     
@@ -322,7 +322,7 @@ async def run_test_sheet(ctx):
 
 
 @client.command()
-async def create_chan(ctx, nation_link, war_type: Optional[int] = 0, reason: Optional[str] = "Carthago Counter", *members: Optional[discord.Member]):
+async def create_chan(ctx, nation_link, war_type: Optional[int] = 0, reason: Optional[str] = "Counter", *members: Optional[discord.Member]):
     ''' 
     Creates a channel using nation link and the list of members to add to it
 
@@ -430,7 +430,7 @@ async def clear_expired(ctx):
                 #try:
                 nation_link = topic.split()[2]
                 #Goes through a nation's wars and see if they still have wars with Carthago
-                carth_and_nexus = ["Carthago", "House Stark", "Order of the White Rose"]
+                carth_and_nexus = ["Carthago", "House Stark", "Order of the White Rose", "The Legion"]
                 for war in get_war_info(nation_link):
                     if war['Aggressor Alliance'] in carth_and_nexus or war['Defender Alliance'] in carth_and_nexus:
                         active_war = True
@@ -565,7 +565,7 @@ async def war_info_full(ctx):
 
 @client.command()
 @commands.cooldown(1, 30, commands.BucketType.user)
-@commands.has_any_role(567389586934726677, 712071416505172090)
+@commands.has_any_role(567389586934726677, 712071416505172090, 731538562633302056, 731538563346464801, 763572336435658803, 731538563971416134)
 async def graph(ctx, type, *alliances): 
     '''
     Graphs specific information for alliances
@@ -762,7 +762,7 @@ async def add(ctx, type, reason = None, *nations):
             if len(ping) != 0:
                 ping_list = ' '.join([f'<@{member}>' for member in ping])
                 target = " ".join(ctx.channel.name.split('-')[:-1])
-                await ctx.send(f'{ping_list} is defending. Please coordinate with the other Carthago members here for the war against {target.title()}.')
+                await ctx.send(f'{ping_list} is defending. Please coordinate with the other members here for the war against {target.title()}.')
        
         #If it is an invalid type of war
         else:
@@ -772,7 +772,7 @@ async def add(ctx, type, reason = None, *nations):
 
 
 @client.command()
-@commands.has_any_role(567389586934726677, 712071416505172090)
+@commands.has_any_role(567389586934726677, 712071416505172090, 731538562633302056, 731538563346464801, 763572336435658803, 731538563971416134)
 async def find_targets_old(ctx, member, target_alliance, ground_max_percent = 120, ground_min_percent = 0, air_max_percent = 120, air_min_percent = 0): 
     ''' 
     Finds targets to attack in an enemy alliance for member
@@ -1050,18 +1050,18 @@ async def find_targets_old(ctx, member, target_alliance, ground_max_percent = 12
 
 #CURRENT TESTING GROUND
 @client.command()
-@commands.has_any_role(567389586934726677, 712071416505172090)
+@commands.has_any_role(567389586934726677, 712071416505172090, 731538562633302056, 731538563346464801, 763572336435658803, 731538563971416134)
 async def find_counters(ctx, target, ground_max_percent = math.inf, ground_min_percent = 80, air_max_percent = math.inf, air_min_percent = 80): 
-    await find_combined(ctx, "Counters", target, "carthago", 1/1.75, 1/0.75, ground_max_percent, ground_min_percent, air_max_percent, air_min_percent)
+    await find_combined(ctx, "Counters", target, "nexus", 1/1.75, 1/0.75, ground_max_percent, ground_min_percent, air_max_percent, air_min_percent)
 
 @client.command()
-@commands.has_any_role(567389586934726677, 712071416505172090)
+@commands.has_any_role(567389586934726677, 712071416505172090, 731538562633302056, 731538563346464801, 763572336435658803, 731538563971416134)
 async def find_targets(ctx, member, target_alliance, ground_max_percent = 120, ground_min_percent = 0, air_max_percent = 120, air_min_percent = 0): 
     await find_combined(ctx, "Targets", member, target_alliance, 0.75, 1.75, ground_max_percent, ground_min_percent, air_max_percent, air_min_percent)
 
 
 @client.command()
-@commands.has_any_role(567389586934726677, 712071416505172090)
+@commands.has_any_role(567389586934726677, 712071416505172090, 731538562633302056, 731538563346464801, 763572336435658803, 731538563971416134)
 async def find_counters_old(ctx, target, ground_max_percent = math.inf, ground_min_percent = 80, air_max_percent = math.inf, air_min_percent = 80): 
 
     ''' 
@@ -1632,16 +1632,16 @@ async def add_to_chan(ctx, nations):
     return members
 
 @client.command()
-@commands.has_any_role(567389586934726677, 712071416505172090)
+@commands.has_any_role(567389586934726677, 712071416505172090, 731538562633302056, 731538563346464801, 763572336435658803, 731538563971416134)
 async def help(ctx):
     help_embed = discord.Embed(title= f"📖 __List of Commands__", color=0xcb2400)
     help_embed.add_field(name = '!find_targets', value = f'Finds a list of targets in an alliance within range and military capabilities.\n Parameters\
         are <member nation id or link> <target alliance> <ground max %> <ground min %> <air max %> <air min %> (default is 120% max and 40% min, not neccessary to fill in)\
         \n__Example__: !find_targets 48730 The+Knights+Radiant 150 90 170 80 finds all TKR nations in range with 150-90% of my ground and 170-80% of my planes', inline = False)
 
-    help_embed.add_field(name = '!find_counters', value = f'Finds a list of targets in Carthago within range and military capabilities to counter.\n Parameters\
+    help_embed.add_field(name = '!find_counters', value = f'Finds a list of targets in Nexus within range and military capabilities to counter.\n Parameters\
         are <target nation id or link> <ground max %> <ground min %> <air max %> <air min %> (default is infinity% max and 80% min, not neccessary to fill in)\
-        \n__Example__: !find_counters 48730 150 90 170 80 finds all Carthago nations in range with 150-90% of my ground and 170-80% of my planes', inline = False)
+        \n__Example__: !find_counters 48730 150 90 170 80 finds all Nexus nations in range with 150-90% of my ground and 170-80% of my planes', inline = False)
     
     category_list_id = []
 
@@ -1667,7 +1667,7 @@ async def help(ctx):
 
         help_embed.add_field(name = '!war_info', value = f'Use in war channel to get excel sheet of MAPs and resistance of all wars target is in.', inline = False)
 
-        help_embed.add_field(name = '!clear_expired', value = f'Deletes all war channels which no longer have active Carthago wars', inline = False)
+        help_embed.add_field(name = '!clear_expired', value = f'Deletes all war channels which no longer have active Nexus wars', inline = False)
 
         help_embed.add_field(name = '!graph', value = f'Creates graphs of the alliances\n Parameters\
             are <scat or histk> <alliance 1> <alliance 2> (use + to seperate spaces)\
@@ -1688,7 +1688,7 @@ async def war_info(ctx):
         await ctx.send("Something went wrong :( likely with the channel set up. Go grab Piggu.")
 
 @client.command()
-@commands.has_any_role(567389586934726677, 712071416505172090)
+@commands.has_any_role(567389586934726677, 712071416505172090, 731538562633302056, 731538563346464801, 763572336435658803, 731538563971416134)
 @commands.cooldown(1, 30, commands.BucketType.channel)
 async def wars(ctx, member):
     if(re.search(r'politicsandwar.com/nation/id=\d{1,7}', member)):
@@ -1954,7 +1954,7 @@ async def bulk_update(ctx, nexus: Optional[str] = "carth"):
     category_list_id = []
     alliance_id = "5049"
     if nexus.lower() == "nexus":
-        alliance_id = "5049,2510,3683"
+        alliance_id = "5049,2510,3683,7580"
 
     #Check if user has manage war chan perms aka are they milcom
     for category in category_list:
@@ -1970,7 +1970,7 @@ async def bulk_update(ctx, nexus: Optional[str] = "carth"):
         curr_chan_list = await get_curr_chan_list(ctx, category_list_id)
         if war_json['success']:
             war_list = war_json['wars']
-            carth_and_nexus = ["Carthago", "House Stark", "Order of the White Rose"]
+            carth_and_nexus = ["Carthago", "House Stark", "Order of the White Rose", "The Legion"]
             war_list_db = pd.DataFrame(war_list)
             active_wars = war_list_db.loc[(war_list_db["status"] == "Active") | (war_list_db["status"] == 'Defender Offered Peace') | (war_list_db["status"] == 'Attacker Offered Peace')]
             defensive_wars = active_wars.loc[active_wars["defenderAA"].isin(carth_and_nexus)]
@@ -2034,9 +2034,9 @@ async def bulk_update(ctx, nexus: Optional[str] = "carth"):
                             target = " ".join(channel.name.split('-')[:-1])
                             # TO CHANGE THIS SO IT ACCOUNTS FOR ATTACKER AND DEFENDER DIFFERENT MESSAGES
                             if member_data["_id"] == war["defenderID"]:
-                                await channel.send(f"<@{member_data['DiscordID']}> is **defending**. Please coordinate with the other Carthago members here for the war against {target.title()}.")
+                                await channel.send(f"<@{member_data['DiscordID']}> is **defending**. Please coordinate with the other Nexus members here for the war against {target.title()}.")
                             else:
-                                await channel.send(f"<@{member_data['DiscordID']}> is **attacking**. Please coordinate with Carthago defenders here for the war against {target.title()}.")
+                                await channel.send(f"<@{member_data['DiscordID']}> is **attacking**. Please coordinate with Nexus defenders here for the war against {target.title()}.")
                     else:
                         await ctx.send(f"{member_data['leader']} ({member_data['_id']}) is not in the server and can not be added to <#{curr_chan_id}>")
                 
