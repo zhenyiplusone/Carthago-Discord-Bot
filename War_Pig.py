@@ -87,7 +87,7 @@ spheres = dict(zip(sphere_names, sphere_alliances))
 
 warmembergsheet = gaccount.open("Carthago Milcom & Personnel").worksheet("Members")
 
-category_list = ['[CANNAE BUT COUNTER]', '[CANNAE BUT COUNTER 2]', '[CANNAE BUT COUNTER 3]', '[BARRACKS]', '[BARRACKS 2]', '[BARRACKS 3]', '[BARRACKS 4]', '[BARRACKS 5]']
+category_list = ['[CANNAE BUT COUNTER]', '[CANNAE BUT COUNTER 2]', '[CANNAE BUT COUNTER 3]', '[BARRACKS]', '[BARRACKS 2]', '[BARRACKS 3]', '[BARRACKS 4]', '[BARRACKS 5]', '[BARRACKS 6]', '[BARRACKS 7]']
 
 # Getting the variables from Heroku
 
