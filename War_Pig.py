@@ -1679,7 +1679,7 @@ async def help(ctx):
         help_embed.add_field(name = '!war_info', value = f'Use in war channel to get excel sheet of MAPs and resistance of all wars target is in.', inline = False)
 
         help_embed.add_field(name = '!wars', value = f'The version of war_info that gets you all information about a nation\' wars. \n Parameter\
-            is a <nation link/nation id/pinging a member>. Example: !wars 48730 or !war @evilpiggyfoofoo@8034', inline = False)
+            is a <nation link/nation id/pinging a member>. Example: !wars 48730 or !wars @evilpiggyfoofoo@8034', inline = False)
 
         
         help_embed.add_field(name = '!clear_expired', value = f'Deletes all war channels which no longer have active wars', inline = False)
