@@ -1668,11 +1668,20 @@ async def help(ctx):
         help_embed.add_field(name = '!bulk_create', value = f'Uses a CSV sheet to create a list of coordination channels.\n Parameter\
             is a CSV sheet using this format https://docs.google.com/spreadsheets/d/1Fo-wEUWkslONQE5tyIkLQ6Ubc3paPUMurx1SgQz8OFo/edit?usp=sharing', inline = False)
 
+        help_embed.add_field(name = '!bulk_create', value = f'Creates channels for all defensive wars and adds members in them.\n Using\
+            !bulk_create backroom will generate def channels for Backroom sphere instead of just Carthago', inline = False)
+
+        help_embed.add_field(name = '!sort_chans', value = f'Sorts the channels in alphabetical order', inline = False)
+
         help_embed.add_field(name = '!add', value = f'Adds attacker or defender to channel.\n Parameters are\
            <atk or def> <member id/link> \n Example: !add atk 48730 adds Piglantia to channel as attacker', inline = False)
 
         help_embed.add_field(name = '!war_info', value = f'Use in war channel to get excel sheet of MAPs and resistance of all wars target is in.', inline = False)
 
+        help_embed.add_field(name = '!wars', value = f'The version of war_info that gets you all information about a nation\' wars. \n Parameter\
+            is a <nation link/nation id/pinging a member>. Example: !wars 48730 or !war @evilpiggyfoofoo@8034', inline = False)
+
+        
         help_embed.add_field(name = '!clear_expired', value = f'Deletes all war channels which no longer have active wars', inline = False)
 
         help_embed.add_field(name = '!graph', value = f'Creates graphs of the alliances\n Parameters\
